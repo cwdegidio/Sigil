@@ -6,14 +6,15 @@
 
 ## Status
 
-Four-layer composition model defined. Provision anatomy complete. Versioning scheme and file conventions established. Next: Sigil identity anatomy.
+All four layer anatomies defined. Sigil identity, scope, Charter anatomy, and Doctrine anatomy are complete. Next decision: example-first or grammar-first ordering before drafting either artifact.
 
 ## Active Work
 
-- [ ] Define Sigil identity anatomy (what goes in the `identity` section beyond name and version)
-- [ ] Define Sigil-level scope section
-- [ ] Define Charter anatomy
-- [ ] Define Doctrine anatomy
+- [x] Define Sigil identity anatomy (what goes in the `identity` section beyond name and version)
+- [x] Define Sigil-level scope section
+- [x] Define Charter anatomy
+- [x] Define Doctrine anatomy
+- [ ] Decide ordering: example-first or grammar-first
 - [ ] Draft grammar (formal or semi-formal)
 - [ ] Write first annotated example sigil
 
@@ -47,3 +48,7 @@ Four-layer composition model defined. Provision anatomy complete. Versioning sch
 - [x] DD-017: Provision field requirements by sub-type
 - [x] DD-018: Versioning scheme — X.X, constrict = major, expand = minor, all layers
 - [x] DD-019: File conventions — `.sigil`, `.charter`, `.doctrine` extensions; separate files per version
+- [x] DD-020: Sigil identity anatomy — name, version, status (required: draft/active/deprecated), description (optional)
+- [x] DD-021: Sigil scope — exclusions only; disavowal of responsibility, not absence inventory
+- [x] DD-022: Charter anatomy — identity, sigils (≥1, Charter-owns), vocabulary, invariants, scope; name-only or pinned version references
+- [x] DD-023: Doctrine anatomy — mirrors Charter with charters (≥1) in place of sigils; vocabulary is resolution chain root
