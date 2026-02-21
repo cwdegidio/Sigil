@@ -14,9 +14,14 @@ All four layer anatomies defined. Sigil identity, scope, Charter anatomy, and Do
 - [x] Define Sigil-level scope section
 - [x] Define Charter anatomy
 - [x] Define Doctrine anatomy
-- [ ] Decide ordering: example-first or grammar-first
-- [ ] Draft grammar (formal or semi-formal)
-- [ ] Write first annotated example sigil
+- [x] Decide ordering: example-first or grammar-first → chose interleaved (Option C)
+- [x] Write first annotated example sigil (`docs/examples/Checkout.sigil`)
+- [x] Draft grammar v0.1 (`spec/grammar.md`) — Sigil layer complete, all open questions resolved
+- [ ] Expand example to include `vocabulary` and `scope` sections
+- [ ] Expand grammar to cover `vocabulary-section` and `scope-section`
+- [ ] Draft grammar for Charter layer
+- [ ] Draft grammar for Doctrine layer
+- [ ] Define Sigil membership reference syntax (name-only vs. name+version) in grammar
 
 ## Open Questions
 
