@@ -1,0 +1,22 @@
+sigil Checkout:
+
+    identity:
+        version: 1.0
+        status: draft
+        description: "Governs the checkout flow from cart confirmation through order creation."
+
+    provision PlaceOrder behavior:
+        trigger:
+            - User submits the checkout form
+        preconditions:
+            - Cart is not empty
+            - User is authenticated
+        postconditions:
+            - Order is created with status Pending
+            - Cart is cleared
+
+    provision OrderTotalMatchesItems rule:
+        preconditions:
+            - Order exists
+        postconditions:
+            - Order.total equals sum of Item.price for each Item in Order

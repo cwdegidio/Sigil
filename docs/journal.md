@@ -149,3 +149,41 @@ Before drafting the grammar or the first annotated example, a sequencing decisio
 ### Next
 
 Decide example-first vs. grammar-first ordering, then begin drafting whichever comes first.
+
+---
+
+## 2026-02-21 — Phase 1 Session 4: Syntax Decisions, First Example, and Grammar v0.1
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Resolved the example-first vs. grammar-first ordering question in favor of an interleaved approach (Option C): minimal example first, grammar derived from it, both expanded together. Used a checkout domain for all examples. Produced the first annotated example sigil and a complete grammar for the Sigil layer, resolving all open questions that surfaced during derivation.
+
+### Key Decisions
+
+- **DD-024**: Block delimiter syntax — colon after block-opening keywords, indentation for body, no explicit end markers.
+- **DD-025**: Scalar field syntax — `key: value` with colon separator. Applies to identity fields only; all provision fields are list-valued.
+- **DD-026**: List item syntax — `-` always required, even for single-item lists. No single-line shorthand.
+- **DD-027**: Trigger variants — `trigger:` (single condition), `trigger and:` (all must fire), `trigger or:` (any fires). All use block form with `-` items. Operators lowercase.
+- **DD-028**: Logical operators (`and`/`or`) scoped to `trigger` only. Preconditions and postconditions are implicitly conjunctive.
+- **DD-029**: Indentation — spaces only, no fixed unit (inferred from first block), consistent per block, no tab/space mixing. Python model.
+- **DD-030**: FREE_TEXT permits colons and dashes — both disambiguated by position.
+- **DD-031**: Sigil section ordering prescribed — meta before spec: `identity` → `vocabulary` → `scope` → `provision+` → `invariants`.
+- **DD-032**: Provision field ordering prescribed — `behavior`: trigger → preconditions → postconditions → invariants. `rule`: preconditions → postconditions → invariants.
+- **DD-033**: `trigger:` item count enforced at grammar level. Multiple items under plain `trigger:` is a parse error.
+
+### Artifacts Produced
+
+- `docs/examples/Checkout.sigil` — minimal example with one `behavior` and one `rule`
+- `spec/grammar.md` v0.1 — Sigil layer grammar, all open questions resolved
+
+### Design Notes
+
+The interleaved approach (Option C) proved its value immediately — writing the example surfaced five grammar questions that would not have appeared from a purely top-down grammar derivation. In particular, the FREE_TEXT disambiguation rule (DD-030) and the trigger item-count enforcement (DD-033) emerged directly from looking at real content.
+
+The meta/spec section ordering split (DD-031) gave the language a coherent read narrative: orient first, specify second. This framing extends naturally to provisions (DD-032) and should be considered when designing Charter and Doctrine structure.
+
+### Next
+
+Expand the Checkout example and grammar to cover `vocabulary` and `scope` sections, then draft the Charter and Doctrine grammar layers.
