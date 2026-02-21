@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this specification or its tools, please cite it as below."
+authors:
+  - family-names: "DeGidio"
+    given-names: "Curtis"
+    email: "curtis.degidio@gmail.com"
+title: "Sigil: A formalized specification language for AI-driven software development"
+version: 1.0.0
+date-released: 2026-02-21
+url: "https://github.com/cwdegidio/Sigil"
