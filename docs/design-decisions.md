@@ -188,3 +188,79 @@ Initial version is `1.0`. Versions are author-managed and embedded in the artifa
 
 The current version of an artifact uses the name alone: `Checkout.sigil`. Historical/pinned versions embed the version in the filename: `Checkout.1.2.sigil`. Provisions do not get their own files — they live as sections within a Sigil file. A Sigil file that becomes unwieldy in size is a signal that it is too broad in scope and should be split into multiple Sigils.
 **Rationale:** Layer-specific extensions make the artifact type immediately identifiable to humans, tooling, and AI agents without reading file contents. This is more reliable than directory-structure conventions (which would bake repository layout assumptions into the standard, violating DD-003) or a single extension for all layers (which requires reading the file to determine its type). Separate files per version allow consumers to pin to a specific version without requiring VCS access, keeping Sigil artifacts self-contained and distributable.
+
+---
+
+## DD-020 — Sigil Identity Anatomy
+
+**Date:** 2026-02-21
+**Decision:** The Sigil `identity` section contains four fields:
+
+| Field | Required | Values / Format |
+|---|---|---|
+| `name` | yes | identifier — the Sigil's unique name within its Charter |
+| `version` | yes | `X.X` format per DD-018 |
+| `status` | yes | `draft` \| `active` \| `deprecated` |
+| `description` | no | free text; human-readable summary |
+
+`status` is required because its purpose is unambiguous lifecycle declaration — an optional status reintroduces the ambiguity it exists to eliminate. The three values cover the full lifecycle: not yet authoritative (`draft`), canonical and in use (`active`), superseded and retired (`deprecated`).
+
+`description` is optional, consistent with DD-012's low authoring barrier. When present, it is for human readers only — it carries no semantic weight for agents and is not a substitute for vocabulary definitions or provision content.
+**Dependency:** DD-012 (name required for minimal valid Sigil), DD-018 (version format).
+
+---
+
+## DD-021 — Sigil Scope: Exclusions Only
+
+**Date:** 2026-02-21
+**Decision:** The Sigil `scope` section is optional and, when present, contains only explicit exclusion declarations. An exclusion is a disavowal of responsibility — an explicit assertion that a concern is outside this Sigil's domain by design. It is not a negative inventory of absent provisions; absence is already observable from the provisions list.
+
+Exclusions are warranted at boundaries where adjacent concerns might otherwise be attributed to this Sigil by a reader or agent. Not every absent concern requires an exclusion — only those where silence would be misleading.
+
+The referential syntax of exclusions (whether they name other Sigils, use vocabulary-defined terms, or use free text) is deferred to the grammar definition phase.
+**Rationale:** Inclusions are redundant with provisions — what a Sigil covers is fully expressed by its provision content. Exclusions are not redundant; they convey intent that cannot be inferred from what is present. Scope as exclusions-only keeps the section non-redundant and focused on the one thing only an author can assert: what is explicitly not this Sigil's responsibility.
+**Dependency:** DD-012 (scope is optional in a minimal valid Sigil), DD-005 (referential syntax subject to parse-first constraint, resolved at grammar phase).
+
+---
+
+## DD-022 — Charter Anatomy
+
+**Date:** 2026-02-21
+**Decision:** A Charter contains the following sections:
+
+| Section | Required | Notes |
+|---|---|---|
+| `identity` | yes | name, version (X.X), status (draft/active/deprecated), description (optional) — same fields and rules as DD-020 |
+| `sigils` | yes, ≥1 | list of member Sigils; name-only = current version, name + version = pinned to that version |
+| `vocabulary` | no | per DD-010; definitions fully replace Doctrine-level terms for the same name |
+| `invariants` | no | cross-Sigil constraints that apply across the entire bounded context |
+| `scope` | no | exclusions only, per DD-021 |
+
+A Charter with no `sigils` entries is a validation error — an empty Charter governs nothing. This extends DD-012's empty-artifact principle to the Charter layer.
+
+The membership reference model: a Sigil referenced by name alone resolves to its current version; a Sigil referenced by name and version is pinned to that version. The syntax of these references is deferred to the grammar definition phase.
+
+The Charter owns the membership relationship — it declares which Sigils belong to it. This preserves the compositional model: provisions compose into Sigils, Sigils compose into Charters, Charters compose into Doctrines.
+**Rationale:** Charter-owns membership keeps each layer self-describing as a boundary declaration. A reader can understand a Charter's full scope from the Charter file alone without traversing all Sigil files. Version pinning allows consumers to lock against a specific Sigil version when stability is required, while name-only references reduce maintenance overhead for the common case.
+**Dependency:** DD-008 (Charter is a first-class layer with vocabulary, invariants, scope), DD-010 (vocabulary at Charter level), DD-018 (version format), DD-019 (file conventions), DD-020 (identity anatomy), DD-021 (scope: exclusions only).
+
+---
+
+## DD-023 — Doctrine Anatomy
+
+**Date:** 2026-02-21
+**Decision:** A Doctrine contains the following sections:
+
+| Section | Required | Notes |
+|---|---|---|
+| `identity` | yes | name, version (X.X), status (draft/active/deprecated), description (optional) |
+| `charters` | yes, ≥1 | list of member Charters; name-only = current version, name + version = pinned |
+| `vocabulary` | no | per DD-010; platform-level root — no higher layer overrides Doctrine definitions |
+| `invariants` | no | platform-wide constraints applying across all member Charters and their Sigils |
+| `scope` | no | exclusions only, per DD-021 |
+
+A Doctrine with no `charters` entries is a validation error — an empty Doctrine governs nothing. This completes the empty-artifact principle established in DD-012 and extended in DD-022 across all layers.
+
+Doctrine vocabulary is the root of the Doctrine → Charter → Sigil resolution chain (DD-011). Doctrine-level definitions are the baseline; Charter definitions override them within a bounded context; Sigil definitions override Charter within a feature. There is no layer above Doctrine.
+**Rationale:** Doctrine mirrors Charter structurally, with Charters in place of Sigils. The same compositional ownership model applies: a Doctrine declares which Charters belong to it, keeping the top-level artifact self-describing as a platform boundary. Doctrine invariants and vocabulary serve the cross-Charter use case that motivated the four-layer model in DD-008.
+**Dependency:** DD-008 (Doctrine layer rationale), DD-010/011 (vocabulary as first-class, full-replacement scoping), DD-018 (version format), DD-019 (file conventions), DD-020 (identity anatomy), DD-021 (scope: exclusions only), DD-022 (Charter anatomy — Doctrine mirrors Charter one layer up).

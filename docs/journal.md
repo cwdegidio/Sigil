@@ -118,3 +118,34 @@ Layer-specific file extensions were chosen over directory-structure conventions 
 ### Next
 
 Define Sigil identity anatomy — what the `identity` section contains beyond the already-settled name and version fields.
+
+---
+
+## 2026-02-21 — Phase 1 Session 3: Layer Anatomies
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Completed the anatomy definitions for all four layers. The structural skeleton of the language is now fully defined from Provision up to Doctrine.
+
+### Key Decisions
+
+- **DD-020**: Sigil identity anatomy — four fields: `name` (required), `version` (required, X.X), `status` (required: `draft` | `active` | `deprecated`), `description` (optional, human-facing only). Tags were considered and rejected — no concrete use case that isn't already served by the composition model or vocabulary.
+- **DD-021**: Sigil scope — exclusions only. An exclusion is an explicit disavowal of responsibility, not a negative inventory of absent provisions. Inclusions are redundant with provisions. Referential syntax deferred to grammar phase.
+- **DD-022**: Charter anatomy — `identity`, `sigils` (required, ≥1), `vocabulary`, `invariants`, `scope`. Charter owns the membership relationship. Sigil references are name-only (current) or name+version (pinned). Syntax deferred to grammar phase.
+- **DD-023**: Doctrine anatomy — mirrors Charter exactly, with `charters` in place of `sigils`. Doctrine vocabulary is the root of the resolution chain; no higher layer overrides it.
+
+### Design Notes
+
+The empty-artifact rule (a layer with no members is invalid) now applies uniformly across all layers: a Sigil requires ≥1 Provision (DD-012), a Charter requires ≥1 Sigil (DD-022), a Doctrine requires ≥1 Charter (DD-023).
+
+The version reference model (name-only = current, name+version = pinned) applies at both the Charter→Sigil and Doctrine→Charter membership levels.
+
+### Open Question Carried Forward
+
+Before drafting the grammar or the first annotated example, a sequencing decision is needed: example-first (syntax driven by concrete authoring) or grammar-first (syntax formally defined, example derived). Both are valid; the choice was deferred to the next session.
+
+### Next
+
+Decide example-first vs. grammar-first ordering, then begin drafting whichever comes first.
