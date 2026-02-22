@@ -73,7 +73,7 @@ export function lex(source, file) {
             // Emit the remainder as tokens for the parser to interpret contextually.
             const rest = content.slice(2);
             const restCol = contentStartCol + 2;
-            tokenizeLineContent(rest, lineNum, restCol, tokens, errors, file);
+            tokenizeLineContent(rest, lineNum, restCol, tokens, file);
         }
         else if (content === '-') {
             // Bare dash with nothing after it — still a list marker, empty content.
@@ -82,7 +82,7 @@ export function lex(source, file) {
         }
         else {
             // Regular structured line
-            tokenizeLineContent(content, lineNum, contentStartCol, tokens, errors, file);
+            tokenizeLineContent(content, lineNum, contentStartCol, tokens, file);
         }
         pushToken('NEWLINE', '', lineNum, contentStartCol + content.length);
     }
@@ -104,7 +104,7 @@ export function lex(source, file) {
 // match a structured token at the current position, the rest of the line
 // (up to end) is collected as a single FREE_TEXT token.
 // ─────────────────────────────────────────────────────────────────────────────
-function tokenizeLineContent(line, lineNum, startCol, tokens, errors, file) {
+function tokenizeLineContent(line, lineNum, startCol, tokens, file) {
     let i = 0;
     function pos(col) {
         return { file, line: lineNum, col };
