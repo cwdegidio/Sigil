@@ -12,9 +12,9 @@ Phase 1 complete. All four-layer grammar defined, annotated examples written for
 
 A → B → C
 
-- **A — Formal spec document** ← active
-- **B — Reference parser/validator**
-- **C — Language extensions**
+- **A — Formal spec document** ✓ complete
+- **B — Reference parser/validator** ✓ complete
+- **C — Language extensions** ← next
 
 ## Active Work
 
@@ -25,7 +25,7 @@ A → B → C
 - [x] Document membership reference resolution formally
 - [x] Define error catalog
 - [x] Plan Phase 2B — reference parser/validator (language, scope, parse-only vs. full validation)
-- [ ] Implement Phase 2B — `@sigil-lang/cli` TypeScript reference parser/validator
+- [x] Implement Phase 2B — `@sigil-lang/cli` TypeScript reference parser/validator
 
 ## Phase 2B Plan (locked)
 
