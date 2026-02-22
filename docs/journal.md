@@ -307,3 +307,38 @@ The language choice (TypeScript over Python) was driven primarily by the library
 ### Next
 
 Implement Phase 2B — `@sigil-lang/cli` TypeScript reference parser/validator.
+
+---
+
+## 2026-02-22 — Phase 2B Implementation
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Implemented the `@sigil-lang/cli` reference parser and validator in full. Phase 2B is complete.
+
+### What Was Built
+
+**Monorepo structure**: Root `package.json` with npm workspaces, `packages/cli/` as the first package. Layout anticipates future `@sigil-lang/*` siblings (VS Code extension, etc.).
+
+**`packages/cli/src/`**:
+- `types.ts` — Token types, complete AST node interfaces for all grammar productions (§5–§8), error types with position info.
+- `lexer.ts` — Indentation-aware tokenizer. Emits virtual INDENT/DEDENT tokens. Detects tabs, mixed tabs/spaces, and inconsistent indent units. Tracks 1-indexed line/col for all tokens.
+- `parser.ts` — Recursive descent parser covering all grammar productions. Accumulates errors (does not abort on first). Enforces all parse error conditions from spec §11.
+- `manifest.ts` — TOML manifest reader using `smol-toml`. Validates required schema fields. Resolves all paths relative to the manifest file, not the working directory.
+- `validator.ts` — Implements §12.2 validation sequence: doctrine → charters → sigils load order; parse error gate before semantic checks; vocabulary resolution chain (Doctrine → Charter → Sigil); version-pinned member reference checking.
+- `reporter.ts` — Formats errors as `file:line:col — [PARSE|VALIDATION]: message`, sorted by file then position. Emits summary count. Returns exit code.
+- `index.ts` — `sigil validate <path-to-manifest>` CLI entry point.
+
+**55 unit tests** across 4 test files (lexer, parser, validator, manifest), all passing with Vitest.
+
+**End-to-end verified**: `sigil validate docs/examples/sigil.toml` correctly identifies four missing artifact files referenced in the example corpus, with accurate file/line/col positions.
+
+### No Design Decisions
+
+No language design decisions were made this session. Implementation choices (monorepo layout, npm workspaces, smol-toml, Vitest) are implementation details, not spec decisions.
+
+### Next
+
+Phase 2C — Language extensions.

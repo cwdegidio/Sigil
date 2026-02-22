@@ -1,0 +1,7 @@
+[project]
+name = "ECommerce"
+doctrine = "ECommerce.doctrine"
+
+[paths]
+charters = "."
+sigils = "."
