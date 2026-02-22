@@ -406,3 +406,93 @@ Fields appearing out of order are a syntax error.
 **Date:** 2026-02-21
 **Decision:** A plain `trigger:` block (no logical operator) is defined in the grammar to accept exactly one list item. A `trigger:` block containing more than one item is a parse error, not a semantic validation error. The author must use `trigger and:` or `trigger or:` to express multiple conditions.
 **Rationale:** Enforcing the single-item constraint at the grammar level is consistent with DD-005 (parse-first, no ambiguity tolerated). A semantic validator could produce a friendlier error message, but the parse failure is itself unambiguous: `trigger:` with multiple items does not match any valid grammar production. The distinction between `trigger:`, `trigger and:`, and `trigger or:` is structurally meaningful — it is correctly a syntactic distinction, not a semantic one. Deferring it to semantic validation would imply the grammar accepts it, which it does not.
+
+---
+
+## DD-034 — Vocabulary Entry Syntax: Block Form with `definition` Field
+
+**Date:** 2026-02-21
+**Decision:** Each vocabulary entry uses block form: a Capitalized CamelCase IDENTIFIER key followed by a colon opens a block containing a single required `definition` field whose value is a QUOTED_STR.
+```
+Cart:
+    definition: "A transient collection of Items selected for purchase by an authenticated User."
+```
+An empty `vocabulary:` block (section present, no entries) is a syntax error. A `vocabulary-entry` block with no `definition` field is a syntax error.
+**Rationale:** Block form is consistent with the structural pattern used throughout the language (provisions, identity, scope). It leaves the entry open to additional fields — such as `example`, `alias`, or `notes` — without requiring a breaking grammar change. Inline scalar form (`Cart: "..."`) would require replacing every entry site to add fields. QUOTED_STR for the definition value is consistent with `description-field` in the identity section and provides explicit string boundaries without relying on positional disambiguation.
+**Dependency:** DD-010 (vocabulary as first-class section), DD-011 (full replacement scoping), DD-013 (Capitalized CamelCase identifiers), DD-025 (scalar field syntax for `definition` field).
+
+---
+
+## DD-035 — Scope Exclusion Syntax: `excludes:` Sub-Block with Free-Text List Items
+
+**Date:** 2026-02-21
+**Decision:** The `scope` section contains a single named sub-block `excludes:` whose body is one or more free-text list items. A `scope:` block with no `excludes:` sub-block, or an `excludes:` block with no list items, is a syntax error.
+```
+scope:
+    excludes:
+        - Payment authorization and processing.
+        - Inventory reservation or stock validation.
+```
+Exclusion items are free text — they are not formal references to other Sigils or vocabulary-defined terms.
+**Rationale:** The `excludes:` keyword makes the sub-block self-describing (consistent with DD-003, open standard: all conventions must be explicit) and reserves the `scope:` block for future sub-blocks without a breaking grammar change. Exclusion content is free text because exclusions are disavowals of responsibility — communicative assertions for human readers and agents, not machine-actionable references. Requiring formal references would constrain exclusions to only things that already exist as named artifacts, which misses the case where an exclusion names a concern no artifact covers.
+**Dependency:** DD-021 (scope: exclusions only), DD-003 (open standard: self-describing), DD-026 (list item syntax).
+
+---
+
+## DD-036 — Membership Reference Syntax: Name-Only and `@` Version Pin
+
+**Date:** 2026-02-21
+**Decision:** Membership references appear as structured list items in `sigils:` (Charter) and `charters:` (Doctrine) sections. Two forms are valid:
+- **Name-only:** `- Checkout` — resolves to the current version of the named artifact.
+- **Version-pinned:** `- Checkout@1.2` — resolves to the specified version.
+
+Membership entries use a `member-item` grammar production distinct from `list-item`. Their content is a parsed `member-ref` (`IDENTIFIER` or `IDENTIFIER "@" VERSION`), not FREE_TEXT. `@` is a single-purpose operator valid only in `member-ref` — it is not valid in provision fields or any other position in the language.
+**Rationale:** `@` carries the semantics of "at version" and is familiar from package manager conventions (npm, pip) without importing programming language connotations. Because `@` is unused elsewhere in the language, its presence unambiguously signals a version pin at parse time, consistent with DD-005 (parse-first). Separating `member-item` from `list-item` in the grammar makes explicit that membership sections contain structured references, not free-text assertions — a validator can extract and resolve names and versions from them directly.
+**Dependency:** DD-022 (Charter `sigils:` section), DD-023 (Doctrine `charters:` section), DD-018 (VERSION format), DD-005 (parse-first).
+
+---
+
+## DD-037 — Charter and Doctrine Section Ordering: Meta Before Spec
+
+**Date:** 2026-02-21
+**Decision:** Sections within a `charter-body` and `doctrine-body` must appear in the following prescribed order:
+
+**Charter:**
+
+| Position | Section | Required |
+|---|---|---|
+| 1 | `identity` | yes |
+| 2 | `sigils` | yes |
+| 3 | `vocabulary` | no |
+| 4 | `scope` | no |
+| 5 | `invariants` | no |
+
+**Doctrine:**
+
+| Position | Section | Required |
+|---|---|---|
+| 1 | `identity` | yes |
+| 2 | `charters` | yes |
+| 3 | `vocabulary` | no |
+| 4 | `scope` | no |
+| 5 | `invariants` | no |
+
+Sections appearing out of order are a syntax error.
+
+**Rationale:** Applies the meta-before-spec principle established in DD-031 to the Charter and Doctrine layers. `identity` declares what the artifact is; `sigils`/`charters` declares what it governs — both are meta. `vocabulary` and `scope` are definitional meta. `invariants` are behavioral spec. Reading in order moves from orientation to governance to specification, consistent with how both human readers and agents should consume the artifact.
+**Dependency:** DD-031 (meta-before-spec principle), DD-022 (Charter anatomy), DD-023 (Doctrine anatomy).
+
+---
+
+## DD-038 — Scenario Testing Model: Behavioral Acceptance, Decoupled from Spec
+
+**Date:** 2026-02-21
+**Decision:** Scenarios are human-authored behavioral acceptance tests. They verify that an implementation does what was intended — not that it structurally conforms to specific spec clauses. Two distinct testing tiers exist:
+
+- **AI-generated unit tests** — derived from the Sigil spec at artifact creation time by the AI agent. These are spec-traceable by construction and are the AI's responsibility to generate and fix.
+- **Human-authored scenarios** — behavioral acceptance tests written in whatever testing framework suits the artifact (Jest, JUnit, Cypress, etc.). They live in `tests/scenarios/` but carry no Sigil-specific format or clause reference syntax.
+
+A failing scenario is a signal to the author to review the spec for clarity or completeness — not a signal for the AI to fix the implementation. A failing AI-generated unit test is the AI's problem.
+
+Sigil makes no claims about scenario format, tooling, or traceability. Scenario tests are outside the language boundary.
+**Rationale:** Requiring scenarios to reference spec clauses conflates two distinct concerns: behavioral verification (did we build the right thing?) and spec compliance (does the implementation match the clause?). Spec compliance is served by AI-generated unit tests. Scenarios serve a higher-order question that only a human can answer by observing end-to-end behavior. Keeping scenarios decoupled preserves their independence as a quality signal on the spec itself — a scenario failure means the spec may be incomplete or unclear, not that a clause was violated.

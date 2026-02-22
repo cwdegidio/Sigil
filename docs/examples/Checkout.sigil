@@ -5,6 +5,24 @@ sigil Checkout:
         status: draft
         description: "Governs the checkout flow from cart confirmation through order creation."
 
+    vocabulary:
+        Cart:
+            definition: "A transient collection of Items selected for purchase by an authenticated User."
+        Item:
+            definition: "A purchasable product with an associated price."
+        Order:
+            definition: "A confirmed purchase record created from a Cart, assigned a lifecycle status."
+        Pending:
+            definition: "The initial Order status indicating the Order has been created but not yet processed."
+        User:
+            definition: "An authenticated account holder initiating the checkout flow."
+
+    scope:
+        excludes:
+            - Payment authorization and processing.
+            - Inventory reservation or stock validation.
+            - Tax and shipping calculation.
+
     provision PlaceOrder behavior:
         trigger:
             - User submits the checkout form
