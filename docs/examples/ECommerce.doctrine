@@ -1,0 +1,28 @@
+doctrine ECommerce:
+
+    identity:
+        version: 1.0
+        status: draft
+        description: "Governs the ECommerce platform. Defines platform-wide vocabulary, cross-charter scope boundaries, and invariants that hold across all bounded contexts."
+
+    charters:
+        - OrderManagement
+        - UserAccounts
+        - Catalog
+
+    vocabulary:
+        User:
+            definition: "An authenticated account holder recognized across all bounded contexts within this platform."
+        Currency:
+            definition: "The single denomination in which all monetary values within the platform are expressed."
+
+    scope:
+        excludes:
+            - Third-party payment processing. Delegated to external payment providers; platform is not responsible for their behavior or availability.
+            - Shipping carrier integration. Delegated to external logistics providers.
+            - Analytics, reporting, and data warehousing. Handled by systems outside this platform boundary.
+
+    invariants:
+        - All monetary values across all bounded contexts are denominated in a single Currency.
+        - Every action within the platform is performed by or on behalf of an authenticated User.
+        - No bounded context may directly invoke the internal operations of another bounded context.

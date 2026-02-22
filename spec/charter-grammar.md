@@ -58,7 +58,7 @@ sigils-section      = "sigils" ":" NEWLINE
                       INDENT member-item+ DEDENT
 ```
 
-At least one `member-item` is required (DD-022). An empty `sigils:` block is a validation error — a Charter with no member Sigils governs nothing. Member references use the `member-ref` production defined in `spec/sigil-grammar.md` (DD-036).
+At least one `member-item` is required (DD-022). An empty `sigils:` block is a parse error — the `+` quantifier is enforced at the grammar level. Member references use the `member-ref` production defined in `spec/sigil-grammar.md` (DD-036).
 
 ---
 

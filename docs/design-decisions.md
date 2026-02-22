@@ -496,3 +496,94 @@ A failing scenario is a signal to the author to review the spec for clarity or c
 
 Sigil makes no claims about scenario format, tooling, or traceability. Scenario tests are outside the language boundary.
 **Rationale:** Requiring scenarios to reference spec clauses conflates two distinct concerns: behavioral verification (did we build the right thing?) and spec compliance (does the implementation match the clause?). Spec compliance is served by AI-generated unit tests. Scenarios serve a higher-order question that only a human can answer by observing end-to-end behavior. Keeping scenarios decoupled preserves their independence as a quality signal on the spec itself — a scenario failure means the spec may be incomplete or unclear, not that a clause was violated.
+
+---
+
+## DD-039 — Empty Member Sections Are Parse Errors
+
+**Date:** 2026-02-21
+**Decision:** An empty `sigils:` block in a Charter and an empty `charters:` block in a Doctrine are parse errors. The grammar productions `sigils-section` and `charters-section` use `member-item+` — the `+` quantifier is enforced at the grammar level, not deferred to semantic validation.
+**Rationale:** Consistent with DD-005 (parse-first) and with the treatment of other required-content blocks in the language (e.g., `vocabulary:`, `excludes:`, `invariants:` — all parse errors when present but empty). A Charter with no member Sigils and a Doctrine with no member Charters are structurally malformed — they govern nothing and cannot be interpreted. This is a structural defect, not a semantic one, and the grammar should reflect that. Deferring it to validation would imply the grammar accepts the empty form, which it does not.
+**Dependency:** DD-022 (Charter anatomy), DD-023 (Doctrine anatomy), DD-005 (parse-first).
+
+---
+
+## DD-040 — Reference Implementation Scope: Full Validation Pipeline
+
+**Date:** 2026-02-22
+**Decision:** The reference parser/validator implements both tiers of validation: parse errors and semantic validation errors (unresolved vocabulary identifiers, unresolvable version-pinned member references). A parse-only implementation is explicitly out of scope.
+**Rationale:** A parse-only tool is insufficient for real authoring use — vocabulary resolution errors are the most likely class of mistake an author makes, and they require cross-file context. Full validation is what makes the tool useful rather than decorative.
+
+---
+
+## DD-041 — Corpus Discovery: Manifest File
+
+**Date:** 2026-02-22
+**Decision:** A TOML manifest file (e.g., `ECommerce.toml`) defines the corpus for a validation run. The manifest names the root doctrine file and provides search paths for resolving charter and sigil names to file paths. No other discovery mechanism is defined.
+**Rationale:** Manifest-based discovery is explicit, portable, and familiar from established tooling ecosystems (Cargo, pyproject). It avoids coupling the language to directory conventions and avoids requiring the user to enumerate every file on the CLI.
+
+---
+
+## DD-042 — Manifest Format: TOML
+
+**Date:** 2026-02-22
+**Decision:** The manifest file uses TOML.
+**Rationale:** TOML is designed for human-authored configuration files, supports comments, has no implicit type coercion footguns (unlike YAML), and carries credible precedent from Cargo.toml and pyproject.toml. JSON was rejected for lack of comment support. YAML was rejected for spec complexity and footguns.
+
+---
+
+## DD-043 — Manifest Schema: Root Doctrine + Search Paths
+
+**Date:** 2026-02-22
+**Decision:** The manifest schema is:
+```toml
+[project]
+name = "ECommerce"
+doctrine = "ECommerce.doctrine"
+
+[paths]
+charters = "charters/"
+sigils = "sigils/"
+```
+The tool loads the doctrine from `project.doctrine`, then resolves member references by looking for `{Name}.charter` in `paths.charters` and `{Name}.sigil` in `paths.sigils`. All paths are resolved relative to the manifest file's location, not the working directory.
+**Rationale:** Since the member reference graph is already encoded in the doctrine and charter files themselves, the manifest's only job is to bootstrap the tool into the graph and provide the file system mapping. Full enumeration of every file in the manifest would be redundant with what the artifacts already declare and would require manifest updates every time a sigil is added.
+
+---
+
+## DD-044 — Reference Implementation Language: TypeScript
+
+**Date:** 2026-02-22
+**Decision:** The reference parser/validator is implemented in TypeScript.
+**Rationale:** TypeScript's type system makes the AST representation self-documenting, and the npm ecosystem provides the cleanest distribution path for a CLI tool and a potential library. VS Code extensions are TypeScript-native, making the initial IDE integration straightforward. Python was the primary alternative; TypeScript was selected for its library consumption story and IDE ecosystem fit.
+
+---
+
+## DD-045 — Distribution: `@sigil-lang/cli` via npm
+
+**Date:** 2026-02-22
+**Decision:** The reference implementation is published as `@sigil-lang/cli` on npm. It supports two invocation modes: zero-install via `npx @sigil-lang/cli validate <manifest>`, and global install via `npm install -g @sigil-lang/cli` which makes `sigil validate` available directly on the PATH.
+**Rationale:** A scoped npm package sidesteps name conflicts, signals intentional project structure, and follows modern CLI tooling conventions. `npx` invocation lowers the barrier to first use — no install step required. Global install is available for users who prefer it without any additional implementation work.
+
+---
+
+## DD-046 — CLI Interface: `sigil validate`
+
+**Date:** 2026-02-22
+**Decision:** The primary CLI command is `sigil validate <path-to-manifest>`. The command name `validate` is reserved for full corpus validation. The top-level `sigil` command namespace is left open for future subcommands (`sigil lint`, `sigil fmt`, etc.).
+**Rationale:** A subcommand structure is extensible without breaking changes and makes the tool's capabilities self-documenting at the command line.
+
+---
+
+## DD-047 — Error Output Format: Human-Readable Compiler-Style
+
+**Date:** 2026-02-22
+**Decision:** Validation output uses compiler-style error messages: `file:line:col — [parse error | validation error]: message`. Structured output (e.g., JSON) is deferred to a future flag; the initial implementation produces only human-readable output.
+**Rationale:** Human-readable output is the right default for a tool that authors run directly. Structured output is needed for IDE integration but can be added as a `--json` flag without breaking the default. Delivering human-readable first keeps the initial implementation scope tight.
+
+---
+
+## DD-048 — IDE Integration Targets: VS Code First, IntelliJ via CLI
+
+**Date:** 2026-02-22
+**Decision:** VS Code is the initial IDE integration target. IntelliJ support is planned but deferred; when implemented, it will consume the CLI as a subprocess rather than importing the TypeScript library directly.
+**Rationale:** VS Code extensions are TypeScript-native, making integration with the reference implementation direct. IntelliJ plugins are Kotlin/Java — neither TypeScript nor Python provides a direct integration path, so the CLI subprocess approach equalizes the options and defers the IntelliJ design to a later phase.
