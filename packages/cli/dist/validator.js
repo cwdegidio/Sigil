@@ -78,9 +78,7 @@ function sigilInvariantTexts(sigil) {
 export function validate(manifest) {
     const errors = [];
     // ── Step 1: Load and parse doctrine ────────────────────────────────────────
-    const doctrineSource = readFileSafe(manifest.doctrinePath, errors, {
-        file: manifest.doctrinePath, line: 1, col: 1,
-    });
+    const doctrineSource = readFileSafe(manifest.doctrinePath);
     if (!doctrineSource)
         return { errors };
     const doctrineResult = parse(doctrineSource, manifest.doctrinePath);
@@ -99,7 +97,7 @@ export function validate(manifest) {
     const sigilsByName = new Map();
     for (const charterRef of doctrine.charters) {
         const charterPath = join(manifest.chartersDir, `${charterRef.name}.charter`);
-        const charterSource = readFileSafe(charterPath, errors, charterRef.pos);
+        const charterSource = readFileSafe(charterPath);
         if (!charterSource) {
             errors.push({
                 category: 'VALIDATION',
@@ -132,7 +130,7 @@ export function validate(manifest) {
         for (const sigilRef of charter.sigils) {
             const sigilPath = join(manifest.sigilsDir, `${sigilRef.name}.sigil`);
             if (!sigilsByName.has(sigilRef.name)) {
-                const sigilSource = readFileSafe(sigilPath, errors, sigilRef.pos);
+                const sigilSource = readFileSafe(sigilPath);
                 if (!sigilSource) {
                     errors.push({
                         category: 'VALIDATION',
@@ -210,7 +208,7 @@ export function validate(manifest) {
     return { errors };
 }
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function readFileSafe(filePath, errors, refPos) {
+function readFileSafe(filePath) {
     try {
         return readFileSync(filePath, 'utf-8');
     }

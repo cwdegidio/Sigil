@@ -18,9 +18,6 @@ export function parse(source, file) {
     function peek() {
         return tokens[pos] ?? { type: 'EOF', value: '', pos: { file, line: 0, col: 0 } };
     }
-    function peekType() {
-        return peek().type;
-    }
     function advance() {
         const t = tokens[pos];
         pos++;
@@ -100,7 +97,7 @@ export function parse(source, file) {
     function parseMemberItems() {
         const refs = [];
         while (check('DASH')) {
-            const dashTok = advance(); // consume DASH
+            advance(); // consume DASH
             const refPos = currentPos();
             if (!check('IDENTIFIER')) {
                 errors.push({
