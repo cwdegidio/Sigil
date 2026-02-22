@@ -231,3 +231,79 @@ The scenario testing discussion clarified the boundary between Sigil (language) 
 ### Next
 
 Phase 1 grammar work is complete. Remaining work: define scenario test format (if any Sigil-specific format is warranted), write additional annotated examples at Charter and Doctrine layers, and begin Phase 2 planning.
+
+---
+
+## 2026-02-22 — Phase 1 Close / Phase 2 Open: Formal Specification
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Closed Phase 1 by writing annotated Charter and Doctrine examples. Decided Phase 2 sequencing (A — formal spec → B — reference parser → C — language extensions). Drafted the unified language specification (`spec/language-spec.md`) and resolved one new design decision that surfaced during drafting.
+
+### Artifacts Produced
+
+- `docs/examples/OrderManagement.charter` — annotated Charter example; governs a bounded context containing `Checkout`, `OrderFulfillment`, and `OrderCancellation` sigils. Demonstrates cross-Sigil vocabulary (User, Cart, Item, Order), scope exclusions with named responsible contexts, and cross-Sigil invariants.
+- `docs/examples/ECommerce.doctrine` — annotated Doctrine example; governs the full platform containing `OrderManagement`, `UserAccounts`, and `Catalog` charters. Demonstrates platform-wide vocabulary (User, Currency), platform-boundary scope exclusions, and platform-wide invariants.
+- `spec/language-spec.md` — unified narrative language specification v0.1 covering all four layers, shared productions, vocabulary resolution chain, membership reference resolution, and a complete parse/validation error taxonomy.
+
+### Key Decisions
+
+- **DD-039**: Empty `sigils:` (Charter) and `charters:` (Doctrine) blocks are parse errors, not validation errors. Consistent with the `+` quantifier in the grammar and the treatment of all other required-content blocks in the language.
+
+### Design Notes
+
+The Charter and Doctrine examples were kept domain-continuous with `Checkout.sigil` to illustrate the full resolution hierarchy in a coherent context. The `User` term is defined at all three layers (Doctrine: platform-wide account holder; Charter: order management context; Sigil: checkout-initiating user), demonstrating the full-replacement scoping model (DD-011) with a concrete instance.
+
+The parse/validation distinction (DD-039) clarified a principle: if the grammar's quantifier already enforces a constraint, the error is structural (parse), not semantic (validation). This principle should be applied consistently if new grammar rules are added in Phase C.
+
+The spec was written in declarative prose rather than RFC 2119 normative language. RFC 2119 keywords are deferred to a later version when the spec is ready for external normative publication.
+
+### Phase 2 Plan
+
+A → B → C:
+- **A — Formal spec document** — complete this session
+- **B — Reference parser/validator** — next
+- **C — Language extensions** — after tooling is in place
+
+### Next
+
+Phase 2A is complete. Next: plan Phase 2B — the reference parser/validator. Decisions needed: implementation language, what "reference" means (canonical behavior vs. illustrative implementation), and whether the parser targets parse errors only or also performs semantic validation.
+
+---
+
+## 2026-02-22 — Phase 2B Planning Complete
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Planned the full Phase 2B reference parser/validator. Resolved all key design decisions: scope, discovery mechanism, manifest format and schema, implementation language, distribution, CLI interface, error output format, and IDE targets. Updated `spec/language-spec.md` (§10, §12) and logged DD-040 through DD-048.
+
+### Key Decisions
+
+- **DD-040**: Scope is full validation — parse errors and semantic validation errors. Parse-only is explicitly out of scope.
+- **DD-041**: Corpus discovery via TOML manifest file. No directory conventions, no CLI enumeration.
+- **DD-042**: Manifest format is TOML — designed for human-authored config, comment support, no footguns. JSON rejected (no comments), YAML rejected (spec complexity, implicit type coercion).
+- **DD-043**: Manifest schema — `[project]` (name, doctrine path) + `[paths]` (charters dir, sigils dir). The member reference graph is already encoded in the artifacts; the manifest only bootstraps the tool into it. All paths resolve relative to the manifest file location.
+- **DD-044**: Implementation language is TypeScript — self-documenting AST types, npm ecosystem, VS Code extension native.
+- **DD-045**: Distribution as `@sigil-lang/cli` on npm. Supports both `npx` (zero-install) and `npm install -g` (global install).
+- **DD-046**: CLI interface is `sigil validate <path-to-manifest>`. Subcommand structure leaves namespace open for future commands.
+- **DD-047**: Output is human-readable compiler-style errors (`file:line:col — [parse error | validation error]: message`). JSON output deferred to a `--json` flag in a later phase.
+- **DD-048**: VS Code is the initial IDE integration target (TypeScript-native). IntelliJ deferred; will consume the CLI as a subprocess.
+
+### Spec Updates
+
+- **§10** — Membership Reference Resolution updated to reference the manifest (§12) instead of deferring discovery to the environment.
+- **§12** — Project Manifest added: schema, path resolution rules, and validation sequence.
+
+### Design Notes
+
+The key insight in the manifest design: since the doctrine already declares its charters, and charters already declare their sigils, the manifest does not enumerate files — it only maps artifact names to file system locations. The reference graph is walked from the doctrine root outward. This keeps the manifest minimal and avoids requiring updates every time a sigil is added.
+
+The language choice (TypeScript over Python) was driven primarily by the library consumption story and IDE ecosystem fit. Python's Lark parser library was noted as a strong alternative for readability; this is the primary tradeoff accepted. A port to Python remains tractable if community need arises.
+
+### Next
+
+Implement Phase 2B — `@sigil-lang/cli` TypeScript reference parser/validator.

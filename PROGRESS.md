@@ -2,36 +2,49 @@
 
 ## Current Phase
 
-**Phase 1 — Language Design**
+**Phase 2 — Formal Specification**
 
 ## Status
 
-Grammar complete for all four layers. All active grammar tasks resolved. Scenario testing model finalized (DD-038). Phase 1 language design is substantially complete.
+Phase 1 complete. All four-layer grammar defined, annotated examples written for all three file types (Sigil, Charter, Doctrine), DD-001 through DD-038 logged, and scenario testing model finalized. Phase 2 begins: convert grammar files and design decisions into a publishable, implementor-facing specification.
+
+## Phase 2 Plan
+
+A → B → C
+
+- **A — Formal spec document** ← active
+- **B — Reference parser/validator**
+- **C — Language extensions**
 
 ## Active Work
 
-- [x] Define Sigil identity anatomy (what goes in the `identity` section beyond name and version)
-- [x] Define Sigil-level scope section
-- [x] Define Charter anatomy
-- [x] Define Doctrine anatomy
-- [x] Decide ordering: example-first or grammar-first → chose interleaved (Option C)
-- [x] Write first annotated example sigil (`docs/examples/Checkout.sigil`)
-- [x] Draft grammar v0.1 (`spec/sigil-grammar.md`) — Sigil layer complete, all open questions resolved
-- [x] Expand example to include `vocabulary` and `scope` sections
-- [x] Expand grammar to cover `vocabulary-section` and `scope-section`
-- [x] Define membership reference syntax → `Name` (current) or `Name@X.X` (pinned), `@` operator (DD-036)
-- [x] Draft grammar for Charter layer (`spec/charter-grammar.md`)
-- [x] Draft grammar for Doctrine layer (`spec/doctrine-grammar.md`)
-- [x] Resolve scenario testing model → behavioral acceptance tests, decoupled from spec (DD-038)
-- [ ] Write annotated Charter example
-- [ ] Write annotated Doctrine example
-- [ ] Determine Phase 2 scope
+- [x] Define formal spec document structure and outline
+- [x] Draft `spec/language-spec.md` — unified narrative spec covering all four layers
+- [x] Define validation rule taxonomy (parse error vs. validation error)
+- [x] Document vocabulary resolution chain formally (Doctrine → Charter → Sigil)
+- [x] Document membership reference resolution formally
+- [x] Define error catalog
+- [x] Plan Phase 2B — reference parser/validator (language, scope, parse-only vs. full validation)
+- [ ] Implement Phase 2B — `@sigil-lang/cli` TypeScript reference parser/validator
+
+## Phase 2B Plan (locked)
+
+| Decision | Choice |
+|---|---|
+| Scope | Full validation — parse errors + semantic validation |
+| Discovery | Manifest file (TOML) |
+| Manifest content | Root doctrine + search paths, relative to manifest location |
+| Implementation language | TypeScript |
+| Distribution | `@sigil-lang/cli` via npm |
+| CLI invocation | `sigil validate <path-to-manifest>` |
+| Output format | Human-readable, compiler-style (`file:line:col — [type]: message`) |
+| Initial IDE target | VS Code (IntelliJ via CLI subprocess later) |
 
 ## Open Questions
 
-- How will AI agents know how to discover, load, and validate against Sigil files? (deferred — tooling/integration question, not a language design question; address after grammar is defined)
+- None active. Previous agent discovery question resolved by manifest-based corpus discovery (DD-041, DD-043).
 
-## Completed
+## Completed — Phase 1
 
 - [x] Project name decided: **Sigil**
 - [x] `README.md` written
@@ -40,3 +53,12 @@ Grammar complete for all four layers. All active grammar tasks resolved. Scenari
 - [x] `PROGRESS.md` and `docs/journal.md` structure defined
 - [x] `docs/design-decisions.md` created
 - [x] DD-001 through DD-038 logged
+- [x] Decide ordering: example-first or grammar-first → chose interleaved (Option C)
+- [x] Write annotated Sigil example (`docs/examples/Checkout.sigil`)
+- [x] Write annotated Charter example (`docs/examples/OrderManagement.charter`)
+- [x] Write annotated Doctrine example (`docs/examples/ECommerce.doctrine`)
+- [x] Draft Sigil grammar (`spec/sigil-grammar.md`) — all sections complete
+- [x] Draft Charter grammar (`spec/charter-grammar.md`)
+- [x] Draft Doctrine grammar (`spec/doctrine-grammar.md`)
+- [x] Define membership reference syntax — `Name` (current) or `Name@X.X` (pinned), `@` operator (DD-036)
+- [x] Resolve scenario testing model — behavioral acceptance tests, decoupled from spec clauses (DD-038)

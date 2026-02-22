@@ -56,7 +56,7 @@ charters-section    = "charters" ":" NEWLINE
                       INDENT member-item+ DEDENT
 ```
 
-At least one `member-item` is required (DD-023). An empty `charters:` block is a validation error — a Doctrine with no member Charters governs nothing. Member references use the `member-ref` production defined in `spec/sigil-grammar.md` (DD-036).
+At least one `member-item` is required (DD-023). An empty `charters:` block is a parse error — the `+` quantifier is enforced at the grammar level. Member references use the `member-ref` production defined in `spec/sigil-grammar.md` (DD-036).
 
 ---
 

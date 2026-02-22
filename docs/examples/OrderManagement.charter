@@ -1,0 +1,32 @@
+charter OrderManagement:
+
+    identity:
+        version: 1.0
+        status: draft
+        description: "Governs the order management bounded context, from cart submission through order lifecycle resolution."
+
+    sigils:
+        - Checkout
+        - OrderFulfillment
+        - OrderCancellation
+
+    vocabulary:
+        User:
+            definition: "An authenticated account holder. All order lifecycle operations are performed by or on behalf of a User."
+        Cart:
+            definition: "A transient collection of Items held for a User prior to checkout."
+        Item:
+            definition: "A purchasable product referenced by an Order, with an associated price at time of purchase."
+        Order:
+            definition: "A confirmed purchase record owned by a User, carrying a lifecycle status from creation through resolution."
+
+    scope:
+        excludes:
+            - Payment authorization and settlement. Responsibility of the Payments bounded context.
+            - Inventory reservation and stock validation. Responsibility of the Catalog bounded context.
+            - User identity and authentication. Responsibility of the UserAccounts bounded context.
+
+    invariants:
+        - An Order cannot hold both a fulfilled status and a cancelled status simultaneously.
+        - Every Order is owned by exactly one User.
+        - All monetary values within this bounded context are denominated in the platform currency.
