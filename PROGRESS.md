@@ -53,8 +53,7 @@ Noted for future design sessions. None are scheduled; design rigor requires each
 - **Conditional branching** — `if`/`else` structure within postconditions or behavior bodies
 - **Tagged invariants** — named invariants that can be referenced or overridden at higher layers
 - **Flow/sequence subtype** — a `flow` provision subtype for multi-step ordered behaviors
-
-Deprecation mechanics explicitly excluded from future consideration (engineer decision, 2026-02-22).
+- **Deprecation mechanics** — formal rules for validator behavior when a referenced artifact carries `status: deprecated`
 
 ## Open Questions
 
