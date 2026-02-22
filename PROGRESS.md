@@ -14,7 +14,7 @@ A → B → C
 
 - **A — Formal spec document** ✓ complete
 - **B — Reference parser/validator** ✓ complete
-- **C — Language extensions** ← next
+- **C — Language extensions** (deferred — see Future Considerations)
 
 ## Active Work
 
@@ -40,9 +40,26 @@ A → B → C
 | Output format | Human-readable, compiler-style (`file:line:col — [type]: message`) |
 | Initial IDE target | VS Code (IntelliJ via CLI subprocess later) |
 
+## Active Work — Next
+
+- [ ] Define AI context strategy: how an AI agent is informed about Sigil in a consuming project
+- [ ] Real-world Sigil corpus: write Sigil specs for an actual project (outside this repo)
+
+## Future Considerations — Language Extensions
+
+Noted for future design sessions. None are scheduled; design rigor requires each to be fully specified before implementation.
+
+- **Cross-sigil references** — provisions referencing named provisions in peer Sigils
+- **Conditional branching** — `if`/`else` structure within postconditions or behavior bodies
+- **Tagged invariants** — named invariants that can be referenced or overridden at higher layers
+- **Flow/sequence subtype** — a `flow` provision subtype for multi-step ordered behaviors
+
+Deprecation mechanics explicitly excluded from future consideration (engineer decision, 2026-02-22).
+
 ## Open Questions
 
-- None active. Previous agent discovery question resolved by manifest-based corpus discovery (DD-041, DD-043).
+- AI context must serve two roles: **spec author** (writing Sigil files) and **spec consumer** (reading Sigil to guide implementation). Decided: both. Open: how many artifacts, where they live, and how context injection is triggered (manual paste vs. SIGIL.md convention vs. CLAUDE.md inclusion).
+- What real-world project do we trial on? Choice drives which provisions need to be written and stress-tests both the language and the context artifacts.
 
 ## Completed — Phase 1
 
