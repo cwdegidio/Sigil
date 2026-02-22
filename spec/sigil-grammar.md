@@ -28,6 +28,7 @@ FREE_TEXT   = any character sequence excluding NEWLINE
               # Colons and dashes permitted mid-line — disambiguated by position (DD-030)
               # A leading "- " (dash + space at line start after indent) is always a list-item marker, never FREE_TEXT
 QUOTED_STR  = '"' any character* '"'
+AT          = "@"                          # version pin operator; valid only in member-ref (DD-036)
 ```
 
 > **DD-029:** Spaces only. No fixed unit — inferred from first indented block. Consistent per block. No mixing of tabs and spaces.
@@ -66,7 +67,7 @@ sigil-body          = identity-section
                       invariants-section?
 ```
 
-`identity-section` is always first. At least one `provision-declaration` is required (DD-012). `vocabulary-section`, `invariants-section`, and `scope-section` are optional and their grammar is TBD.
+`identity-section` is always first. At least one `provision-declaration` is required (DD-012). `vocabulary-section`, `scope-section`, and `invariants-section` are optional; their grammar follows below.
 
 > **DD-031:** Section ordering is prescribed. Meta sections (`identity`, `vocabulary`, `scope`) precede spec sections (`provision`, `invariants`). Out-of-order sections are a syntax error.
 
@@ -181,11 +182,76 @@ The `-` marker is followed by a single space, then free-text content (DD-026). F
 
 ---
 
+## Vocabulary Section
+
+```
+vocabulary-section  = "vocabulary" ":" NEWLINE
+                      INDENT vocabulary-entry+ DEDENT
+
+vocabulary-entry    = IDENTIFIER ":" NEWLINE
+                      INDENT definition-field DEDENT
+
+definition-field    = "definition" ":" QUOTED_STR NEWLINE
+```
+
+At least one `vocabulary-entry` is required if the section is present — an empty `vocabulary:` block is a syntax error. Each entry key is an IDENTIFIER (Capitalized CamelCase per DD-013). The `definition` value is a `QUOTED_STR` — a human-readable, free-text description of the term.
+
+A Capitalized identifier appearing in any provision within this Sigil that has no corresponding vocabulary entry in the Doctrine → Charter → Sigil resolution chain is a validation error (DD-013).
+
+> **DD-034:** Vocabulary entry syntax uses block form: an IDENTIFIER key opens a block containing a single required `definition` field whose value is a QUOTED_STR. This is consistent with the block-form pattern used throughout the language and leaves the entry structure open to additional fields without a grammar change.
+
+---
+
+## Scope Section
+
+```
+scope-section       = "scope" ":" NEWLINE
+                      INDENT excludes-block DEDENT
+
+excludes-block      = "excludes" ":" NEWLINE
+                      INDENT list-item+ DEDENT
+```
+
+At least one `list-item` is required under `excludes:` — a present `scope:` block with no exclusions is a syntax error. Exclusion items are free text (DD-021): they name adjacent concerns explicitly out of scope for this Sigil. They are not formal references to other Sigils or vocabulary terms.
+
+> **DD-035:** Scope exclusion syntax uses a named `excludes:` sub-block containing free-text list items. The `excludes:` keyword makes the section self-describing and reserves the `scope:` block for future sub-blocks without a grammar change. Exclusion content is free text — exclusions are disavowals of responsibility, not machine-actionable references.
+
+---
+
+## Invariants Section
+
+```
+invariants-section  = "invariants" ":" NEWLINE
+                      INDENT list-item+ DEDENT
+```
+
+At least one `list-item` is required if the section is present — an empty `invariants:` block is a syntax error. List items are free text, identical in form to provision field list items.
+
+This production is shared across layers: at the Sigil level it expresses constraints that hold across all provisions; at the Charter level it expresses cross-Sigil constraints; at the Doctrine level it expresses platform-wide constraints. The grammar production is identical at all layers — the semantic scope is determined by the containing declaration.
+
+Note: provision-level invariants use the `invariants-field` production (defined above), which has the same syntax. The naming difference signals context of use — `invariants-field` is contained within a provision body; `invariants-section` is a top-level section of a Sigil, Charter, or Doctrine body.
+
+---
+
+## Membership Reference
+
+```
+member-item = "-" " " member-ref NEWLINE
+
+member-ref  = IDENTIFIER
+            | IDENTIFIER "@" VERSION
+```
+
+`member-item` is structurally identical to `list-item` in appearance but produces a parsed reference rather than FREE_TEXT. Name-only (`- Checkout`) resolves to the current version of the named artifact. Version-pinned (`- Checkout@1.2`) resolves to the specified version. `@` is the version pin operator and is not valid in any other position in the language.
+
+`member-item` is used in the `sigils-section` of a Charter and the `charters-section` of a Doctrine. It is not valid in provision fields — those use `list-item`.
+
+> **DD-036:** Membership references use `IDENTIFIER` for name-only and `IDENTIFIER "@" VERSION` for version-pinned references. `@` is introduced as a single-purpose operator: it carries the semantics of "at version" and is familiar from package manager conventions without importing programming language connotations. Because `@` is unused elsewhere in the language, its presence unambiguously signals a version pin at parse time.
+
+---
+
 ## Sections TBD
 
-The following sections are defined in design decisions but not yet reflected in the grammar:
+The following are defined in design decisions but not yet reflected in the grammar:
 
-- `vocabulary-section` — DD-010, DD-011
-- `scope-section` — DD-021
-- `invariants-section` (Sigil-level) — DD-008
-- Charter and Doctrine grammars — DD-022, DD-023
+- Charter and Doctrine grammars — DD-022, DD-023 (see `spec/charter-grammar.md`, `spec/doctrine-grammar.md`)

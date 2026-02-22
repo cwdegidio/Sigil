@@ -187,3 +187,47 @@ The meta/spec section ordering split (DD-031) gave the language a coherent read 
 ### Next
 
 Expand the Checkout example and grammar to cover `vocabulary` and `scope` sections, then draft the Charter and Doctrine grammar layers.
+
+---
+
+## 2026-02-21 — Phase 1 Session 5: Grammar Complete, Testing Model Resolved
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Completed the grammar for all four layers. Expanded the Checkout example with `vocabulary` and `scope`. Resolved all active grammar tasks. Clarified and finalized the scenario testing model, closing the last open question from the previous session.
+
+### Key Decisions
+
+- **DD-034**: Vocabulary entry syntax — block form with `definition: QUOTED_STR` subfield. Extensible without breaking grammar changes.
+- **DD-035**: Scope exclusion syntax — `excludes:` named sub-block with free-text list items. Self-describing; exclusions are communicative, not formally referential.
+- **DD-036**: Membership reference syntax — `- Name` (current version) or `- Name@X.X` (version-pinned). `@` introduced as a single-purpose version pin operator. Membership entries use `member-item` (structured), not `list-item` (free-text).
+- **DD-037**: Charter and Doctrine section ordering — meta-before-spec principle from DD-031 extended to both layers: identity → sigils/charters → vocabulary → scope → invariants.
+- **DD-038**: Scenario testing model — two tiers: AI-generated unit tests (spec-derived, AI's responsibility) and human-authored behavioral acceptance tests (framework-agnostic, decoupled from spec). Scenario failures signal spec quality issues to the author, not implementation bugs to the AI. Sigil makes no claims about scenario format or tooling.
+
+### Artifacts Produced
+
+- `docs/examples/Checkout.sigil` — expanded with `vocabulary` (5 terms) and `scope` (3 exclusions)
+- `spec/sigil-grammar.md` — renamed from `grammar.md`; completed with `vocabulary-section`, `scope-section`, `invariants-section`, `member-item` productions
+- `spec/charter-grammar.md` — Charter layer grammar v0.1
+- `spec/doctrine-grammar.md` — Doctrine layer grammar v0.1
+
+### Design Notes
+
+The vocabulary term naming question (CamelCase vs. Title Case) surfaced a downstream constraint: vocabulary terms must be recognizable in FREE_TEXT provision content (DD-013 validation model). Title Case with spaces would break that detection. CamelCase was retained.
+
+The scenario testing discussion clarified the boundary between Sigil (language) and tooling (agent execution, test generation). Unit test generation from the spec is an agent capability, not a language feature. Scenarios are a human quality-assurance artifact, not a spec-traceability mechanism.
+
+### Files Updated
+
+- `CLAUDE.md` — removed "test case generator" from Claude's role; updated `tests/scenarios/` row and Key Design Constraints to reflect DD-038
+- `docs/design-decisions.md` — DD-034 through DD-038 appended
+
+### Open Questions Resolved
+
+- Scenario clause reference syntax — resolved as N/A; scenarios are decoupled from spec (DD-038)
+
+### Next
+
+Phase 1 grammar work is complete. Remaining work: define scenario test format (if any Sigil-specific format is warranted), write additional annotated examples at Charter and Doctrine layers, and begin Phase 2 planning.

@@ -8,7 +8,6 @@ We are designing **Sigil**, a formalized specification language for AI-driven so
 
 - Co-author of the spec language (design decisions, syntax, grammar)
 - Documentation writer (specs, guides, examples)
-- Test case generator (scenario definitions, edge cases)
 
 ## Communication Style
 
@@ -40,7 +39,7 @@ We are designing **Sigil**, a formalized specification language for AI-driven so
 | `docs/design-decisions.md` | Logged design decisions with rationale            | Append when a decision is finalized; prompt the engineer to confirm before logging |
 | `docs/examples/`           | Annotated example sigils                          | Add examples as constructs are finalized                                           |
 | `spec/`                    | The Sigil language spec                           | Primary design artifact; treat with highest rigor                                  |
-| `tests/scenarios/`         | Scenario-based tests linked to spec clauses       | Add scenarios as spec clauses are written                                          |
+| `tests/scenarios/`         | Human-authored behavioral acceptance tests; framework-agnostic | Do not generate; scenarios are human-authored only (DD-038)             |
 
 ### Session Start
 
@@ -66,5 +65,5 @@ We are designing **Sigil**, a formalized specification language for AI-driven so
 - The spec language must be machine-parseable
 - Scope exclusions are always explicit, never implied
 - Every behavior must have preconditions, postconditions, and invariants
-- Scenario tests must be traceable to specific spec clauses
+- Scenario tests are human-authored behavioral acceptance tests; they are not traceable to specific spec clauses (DD-038)
 - Ambiguity is a defect in the spec, not a judgment call for the implementor
