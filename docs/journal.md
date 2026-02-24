@@ -382,3 +382,46 @@ The decision to embed content as string literals in `context.ts` rather than loa
 ### Next
 
 Create the pet health app external repo and begin writing the Sigil corpus (Doctrine → Charters → Sigils).
+
+---
+
+## 2026-02-23 — Greenfield Workflow Design and CLI Scaffolding
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Defined the iterative greenfield workflow for new projects adopting Sigil. Resolved versioning edge cases that surfaced during workflow design. Implemented `sigil init` and `sigil agent add` CLI commands. Three design decisions logged (DD-053 through DD-055).
+
+### Workflow Defined
+
+The greenfield workflow is iterative — spec one feature, implement it, verify, repeat — not spec-everything-first. Two stages:
+
+**Bootstrap (one-time):** `sigil init <project-name>` → produces platform-agnostic artifacts. `sigil agent add <agent>` → produces agent-specific scaffolding. Write Doctrine with `/author`. Validate.
+
+**Feature loop (per feature):** `/author` → write or extend Charter + write Sigil → `sigil validate` → `/consumer` → implement + unit tests → assess failures (spec issue or implementation issue) → mark Sigil `active`.
+
+### Key Decisions
+
+- **DD-053**: `sigil init` and `sigil agent add` are separate subcommands. `sigil init` is platform-agnostic (honors DD-003). `sigil agent add` is additive and agent-specific. Agent files live at project level, not user level, so they are versioned with the project.
+- **DD-054**: Version bumping is only required when a Sigil (or Charter/Doctrine) is `status: active`. While `draft`, revise freely — no consumer exists yet to break.
+- **DD-055**: Charter and Doctrine version bumps are independent of member version bumps. A Sigil bumping its own version does not require a Charter bump. Charter bumps only when its own content changes (membership set, vocabulary, invariants, scope).
+
+### Artifacts Produced
+
+- `packages/cli/src/init.ts` — `sigil init <project-name>` (non-interactive) and `initInteractive()` (clack arrow-key menus for project name and agent selection, with unified file audit at completion)
+- `packages/cli/src/agent.ts` — `sigil agent add <agent-name>` (`claude-code` supported; `.claude/commands/author.md` and `consumer.md` generated at project level)
+- `packages/cli/src/index.ts` — updated to route `init` and `agent` commands; usage updated
+- `@clack/prompts` added as a dependency for interactive mode
+
+### Design Notes
+
+The interactive `sigil init` folds agent selection into the onboarding flow so new users don't need to know `sigil agent add` exists. Power users pass the project name directly as an arg and run `sigil agent add` separately. Both paths produce identical output.
+
+The `note()` audit at the end of the interactive flow lists every file created and any skipped in a single block — cleaner than interleaving clack UI with `console.log` from multiple functions.
+
+The `/author` and `/consumer` Claude Code custom commands restrict and enable the right behaviors per mode: `/author` gates edits to spec files only; `/consumer` runs validate first, reads the corpus, plans, awaits approval, then implements.
+
+### Next
+
+Create the pet health app external repo. Bootstrap with `sigil init PetHealth && sigil agent add claude-code`. Begin writing the Sigil corpus using `/author`.

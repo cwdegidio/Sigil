@@ -6,7 +6,7 @@
 
 ## Status
 
-Phase 2A (formal spec) and Phase 2B (reference parser/validator) complete. Phase 2C (AI context strategy and real-world trial) is underway. Context artifacts drafted and `sigil context` command implemented. Trial project selected; next step is creating the external project and writing the pet health app Sigil corpus.
+Phase 2A (formal spec) and Phase 2B (reference parser/validator) complete. Phase 2C (AI context strategy and real-world trial) is underway. Context artifacts, `sigil context`, `sigil init`, and `sigil agent add` commands implemented. Greenfield workflow defined and design decisions logged (DD-053 through DD-055). Trial project selected; next step is creating the external project using `sigil init` and writing the pet health app Sigil corpus.
 
 ## Phase 2 Plan
 
@@ -29,6 +29,13 @@ A → B → C
 - [x] Define AI context strategy (DD-049 through DD-052)
 - [x] Draft `docs/context-artifacts/SIGIL-AUTHOR.md` and `SIGIL-CONSUMER.md`
 - [x] Implement `sigil context --role <author|consumer>` CLI command
+- [x] Define greenfield project workflow (iterative: spec → validate → implement → verify)
+- [x] Log DD-053 — `sigil init` / `sigil agent add` scaffolding split
+- [x] Log DD-054 — version bumping required only after first `active` implementation
+- [x] Log DD-055 — Charter/Doctrine version bumps independent of member version bumps
+- [x] Implement `sigil init <project-name>` — platform-agnostic project bootstrap
+- [x] Implement `sigil agent add <agent-name>` — agent-specific scaffolding (`claude-code` supported)
+- [x] Interactive `sigil init` with clack arrow-key menus (project name + agent selection)
 
 ## Phase 2B Plan (locked)
 
@@ -57,10 +64,8 @@ A → B → C
 ## Active Work — Next
 
 - [ ] Create pet health app project (external repo)
-- [ ] Install `@sigil-lang/cli` from local path in the pet health project
-- [ ] Generate `SIGIL-AUTHOR.md` and `SIGIL-CONSUMER.md` in the pet health project root via `sigil context`
-- [ ] Add `CLAUDE.md` to the pet health project referencing both context artifacts
-- [ ] Write Doctrine, Charters, and Sigils for the pet health app
+- [ ] Bootstrap via `sigil init PetHealth && sigil agent add claude-code`
+- [ ] Write Doctrine, Charters, and Sigils for the pet health app using `/author`
 - [ ] Trial: use AI agent with `SIGIL-CONSUMER.md` to implement the app against the spec
 - [ ] Evaluate trial results; publish to npm at v0.2.0 if successful
 
