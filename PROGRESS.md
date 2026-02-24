@@ -6,7 +6,7 @@
 
 ## Status
 
-Phase 2A (formal spec) and Phase 2B (reference parser/validator) complete. Phase 2C (AI context strategy and real-world trial) is underway. Context artifacts, `sigil context`, `sigil init`, and `sigil agent add` commands implemented. Greenfield workflow defined and design decisions logged (DD-053 through DD-055). Trial project selected; next step is creating the external project using `sigil init` and writing the pet health app Sigil corpus.
+Phase 2A (formal spec) and Phase 2B (reference parser/validator) complete. Phase 2C (AI context strategy and real-world trial) is underway. Trial 1 (PetHealth app) complete — corpus authored, app implemented, feedback captured in `docs/trial-2-23-2026_1/`. Trial findings are being worked through before npm publish at v0.2.0.
 
 ## Phase 2 Plan
 
@@ -61,13 +61,38 @@ A → B → C
 | Trial install | Local path (`npm install /path/to/sigil/packages/cli`) |
 | npm publish | After successful trial; version bump to 0.2.0 at publish time |
 
-## Active Work — Next
+## Active Work — Trial 1 Findings
 
-- [ ] Create pet health app project (external repo)
-- [ ] Bootstrap via `sigil init PetHealth && sigil agent add claude-code`
-- [ ] Write Doctrine, Charters, and Sigils for the pet health app using `/author`
-- [ ] Trial: use AI agent with `SIGIL-CONSUMER.md` to implement the app against the spec
-- [ ] Evaluate trial results; publish to npm at v0.2.0 if successful
+Items surfaced during the PetHealth trial (`docs/trial-2-23-2026_1/`). Grouped by category.
+
+### Tooling Bugs
+- [ ] Fix `sigil --version` — currently returns `Unknown command: '--version'`
+- [ ] `sigil init` produces no `CLAUDE.md` — decide whether to generate one or output a paste-in block (sdkman-style)
+
+### Project Structure
+- [ ] Decide: should Doctrine, Charter, and Sigil files live under a `spec/` subfolder? Only `sigil.toml` at root. Requires design decision.
+
+### Validator Improvements
+- [ ] Plural form resolution — `Appointments` does not resolve from `Appointment`; decide on validator behavior or enforce singular-only convention in spec
+- [ ] Articles at line-start parsed as identifiers (`The`, `An`, `No`, `All`) — surprising failure mode; improve error message or add authoring guidance
+- [ ] Status values require explicit vocabulary entries — not obvious; improve error message with "did you mean? / add this to vocabulary" suggestion
+- [ ] General: validator error messages are terse; invest in actionable suggestions
+
+### Language Extensions to Design
+- [ ] HTTP semantics — optional `http:` annotation on postconditions for error status codes (e.g., `status: 409`)
+- [ ] Response shapes — `returns:` block or response schema for collection endpoints
+- [ ] Implementation notes — `strategy:` or `implementation note:` annotation on provisions for derived architectural decisions (e.g., session invalidation mechanism)
+- [ ] Typed vocabulary — structured subfields for enum values so the validator can catch inconsistencies (e.g., `Species: Dog, Cat, Bird` referenced but `Rabbit` used in a provision)
+
+### Workflow Improvements
+- [ ] Consumer-mode spec gap flagging — lightweight mechanism to flag an ambiguity from consumer mode without switching to author mode and editing the spec
+
+### Publish Gate
+- [ ] Resolve above items as appropriate; publish to npm at v0.2.0
+
+## Future Trials
+
+- [ ] **Trial 2 — Brownfield project workflow** — define and trial a workflow for adopting Sigil on an existing codebase (spec written after implementation exists, or incrementally alongside active development)
 
 ## Future Considerations — Language Extensions
 
