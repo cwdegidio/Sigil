@@ -425,3 +425,50 @@ The `/author` and `/consumer` Claude Code custom commands restrict and enable th
 ### Next
 
 Create the pet health app external repo. Bootstrap with `sigil init PetHealth && sigil agent add claude-code`. Begin writing the Sigil corpus using `/author`.
+
+---
+
+## 2026-02-24 — Phase 2C Trial 1: PetHealth App
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Conducted the first real-world trial of the full Sigil workflow. Authored a complete Sigil corpus for a greenfield pet health app (Vue frontend, Spring Boot backend, H2 database), then used an AI agent in `/consumer` mode to implement the app against the spec. Captured detailed feedback from the agent's implementation experience.
+
+### What Was Trialed
+
+- Bootstrapped the PetHealth external project via `sigil init PetHealth` and `sigil agent add claude-code`
+- Authored `PetHealth.doctrine`, three charters (`Authentication`, `PetProfiles`, `Appointments`), and a full set of sigils covering owner registration, login, session management, pet profiles, and appointment scheduling
+- Ran `sigil validate` throughout authoring; fixed parse and validation errors encountered during corpus authoring
+- Switched to `/consumer` mode; AI agent traversed the corpus, produced an implementation plan, and implemented the full stack
+
+### Key Findings
+
+**What worked well:**
+- Corpus traversal order (doctrine → charter → sigil) is natural and effective — vocabulary and invariants were available by the time each sigil was read
+- Named provisions made implementation traceability clear — every endpoint traced back to a named provision
+- `scope.excludes` prevented scope creep without ambiguity
+- Charter-level invariants handled cross-cutting concerns (authentication gate) without repetition in every sigil
+- Vocabulary definitions with concrete detail (seed data, formats, enum values) drove real implementation decisions
+- The `behavior` vs. `rule` distinction was genuinely useful in practice
+
+**Friction and gaps identified:**
+- `sigil --version` is broken
+- `sigil init` produces no `CLAUDE.md` — user must generate one manually
+- Validator vocabulary strictness has a steep learning curve: plural forms, leading articles, and status values all cause non-obvious failures; error messages are correct but terse
+- No HTTP semantics in the spec — status codes for error cases are left to the implementor
+- Response shapes for collection endpoints are underspecified
+- Implicit architectural decisions (e.g., session invalidation requiring server-side tracking) can lead to silent non-compliance for less experienced implementors
+- Consumer-mode spec gap flagging requires a full mode switch
+- Vocabulary definitions are unvalidated prose — enum value inconsistencies are not caught
+
+### Artifacts
+
+- `docs/trial-2-23-2026_1/trial-workflow.md` — step-by-step workflow instructions for the trial
+- `docs/trial-2-23-2026_1/trial-notes.md` — running notes captured during the trial
+- `docs/trial-2-23-2026_1/feedback.md` — detailed agent feedback on the implementation experience
+
+### Next
+
+Work through trial findings before publishing to npm at v0.2.0. Items tracked in `PROGRESS.md` under "Active Work — Trial 1 Findings".
