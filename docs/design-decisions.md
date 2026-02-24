@@ -619,3 +619,47 @@ The tool loads the doctrine from `project.doctrine`, then resolves member refere
 **Date:** 2026-02-22
 **Decision:** `SIGIL-AUTHOR.md` covers: orientation, file types and when to use each, grammar reference for all three layers, vocabulary resolution chain, naming and file organization conventions, design constraints, abbreviated DD references, and annotated examples. `SIGIL-CONSUMER.md` covers: orientation, manifest location and file graph traversal, provision interpretation (preconditions/postconditions/invariants as implementation contracts), vocabulary resolution, scope exclusion handling, ambiguity protocol (flag, do not guess), and validator usage.
 **Rationale:** Each artifact is scoped to what the agent needs for its role and nothing more. Content was derived by analyzing the distinct tasks each role performs against the full Sigil spec.
+
+---
+
+## DD-053 — Project Scaffolding: `sigil init` and `sigil agent add`
+
+**Date:** 2026-02-23
+**Decision:** Project bootstrapping uses two subcommands with distinct responsibilities:
+- `sigil init` — produces platform-agnostic artifacts only: `SIGIL-AUTHOR.md`, `SIGIL-CONSUMER.md`, and `sigil.toml`. No agent-specific files are generated.
+- `sigil agent add <name>` — produces agent-specific scaffolding (e.g., `.claude/commands/author.md` and `.claude/commands/consumer.md` for Claude Code) at the project level. Can be run independently of `sigil init` and supports multiple agent targets.
+
+Agent-specific files live at the project level (not user-level) so they are versioned with the project and available to all team members without individual setup.
+**Rationale:** `sigil init` must remain platform-agnostic to honor DD-003 (open standard, no assumed institutional context). Agent integration is additive and optional — a team not using Claude Code should not encounter Claude-specific artifacts in their project. Separating the two commands makes that boundary explicit and keeps each command's responsibility narrow.
+
+---
+
+## DD-054 — Version Bumping Required Only After First Active Implementation
+
+**Date:** 2026-02-23
+**Decision:** Version bumping per DD-018 is only required when a Sigil (or Charter or Doctrine) carries `status: active`. While an artifact is `status: draft`, revisions do not require a version bump. The `draft` status signals that no verified consumer implementation exists yet — there is nothing to break. The first transition from `draft` to `active` marks the point at which versioning becomes meaningful. From that point forward, any constricting or expanding change requires a bump per DD-018.
+
+The same rule applies to Charters: while all member Sigils remain `draft`, adding a new Sigil reference to the Charter does not require a Charter version bump.
+**Rationale:** Requiring version bumps during initial spec authoring and first implementation is overhead with no benefit — there is no consumer to protect. The `status` field (DD-020) already encodes the lifecycle state that determines when versioning obligations begin. Tying the version bump rule to `active` status makes the obligation explicit and removes ambiguity about when it applies.
+
+---
+
+## DD-055 — Charter and Doctrine Version Bumps Are Independent of Member Version Bumps
+
+**Date:** 2026-02-23
+**Decision:** A Charter's version bump obligation is determined solely by changes to the Charter's own content. A member Sigil bumping its own version does not require a Charter version bump. The Charter's name-only reference (`- Checkout`) continues to resolve to the current version of that Sigil without any change to the Charter file. The same rule applies one layer up: a Doctrine does not bump when a member Charter bumps.
+
+Charter version bumps are required only when the Charter file itself changes:
+
+| Change | Type | Bump |
+|---|---|---|
+| Sigil added to `sigils:` | expanding | minor |
+| Sigil removed from `sigils:` | constricting | major |
+| Version pin added, changed, or removed on a member reference | constricting or expanding | major or minor |
+| Vocabulary term added | expanding | minor |
+| Vocabulary term changed or removed | constricting | major |
+| Invariant or scope changed | per DD-018 | major or minor |
+
+**No bump required** when a member Sigil bumps its own version or changes its status.
+
+**Rationale:** Each layer's versioning contract covers that layer's own content — not the contracts of its members. A Charter's consumers depend on the Charter's vocabulary, invariants, scope, and membership set. They do not depend on which version of a member Sigil is current at any given time; that is the Sigil's own versioning concern. Conflating the two would cause Charter versions to churn on every Sigil change, making Charter version history noisy and the bump signal meaningless.
