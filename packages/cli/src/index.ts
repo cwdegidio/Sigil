@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { loadManifest, ManifestError } from './manifest.js'
 import { validate } from './validator.js'
 import { report } from './reporter.js'
@@ -6,12 +9,20 @@ import { getContext, type Role } from './context.js'
 import { init, initInteractive, printInitResult, printAgentResult } from './init.js'
 import { addAgent } from './agent.js'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const { version } = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+
 // ─── CLI entry point ──────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2)
 
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   printUsage()
+  process.exit(0)
+}
+
+if (args[0] === '--version' || args[0] === '-v') {
+  console.log(version)
   process.exit(0)
 }
 
@@ -41,7 +52,7 @@ if (command === 'agent') {
     printUsage()
     process.exit(1)
   }
-  const result = addAgent(agentName, process.cwd())
+  const result = await addAgent(agentName, process.cwd())
   printAgentResult(agentName, result)
   process.exit(0)
 }
@@ -97,6 +108,7 @@ function printUsage(): void {
 sigil — Sigil language reference validator
 
 Usage:
+  sigil --version
   sigil init <project-name>
   sigil agent add <agent-name>
   sigil validate <path-to-manifest>

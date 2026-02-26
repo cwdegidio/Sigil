@@ -66,11 +66,15 @@ Next steps:
   sigil validate sigil.toml  Validate the corpus once spec files are written`)
 }
 
-export function printAgentResult(agentName: string, result: { created: string[]; skipped: string[] }): void {
+export function printAgentResult(agentName: string, result: { created: string[]; skipped: string[]; appended: string[] }): void {
   if (result.created.length > 0) {
     console.log(`\nAdded ${agentName} scaffolding.\n`)
     console.log('Created:')
     for (const f of result.created) console.log(`  ${f}`)
+  }
+  if (result.appended.length > 0) {
+    console.log('\nAppended to:')
+    for (const f of result.appended) console.log(`  ${f}`)
   }
   if (result.skipped.length > 0) {
     console.log('\nSkipped (already exist):')
@@ -118,15 +122,21 @@ export async function initInteractive(outputDir: string): Promise<void> {
 
   const name = (projectName as string).trim()
   const initResult = init(name, outputDir)
-  const agentResult = agentChoice !== 'none' ? addAgent(agentChoice as string, outputDir) : null
+  const agentResult = agentChoice !== 'none' ? await addAgent(agentChoice as string, outputDir) : null
 
   const allCreated = [...initResult.created, ...(agentResult?.created ?? [])]
+  const allAppended = [...(agentResult?.appended ?? [])]
   const allSkipped = [...initResult.skipped, ...(agentResult?.skipped ?? [])]
 
   const lines: string[] = []
   if (allCreated.length > 0) {
     lines.push('Created:')
     for (const f of allCreated) lines.push(`  ${f}`)
+  }
+  if (allAppended.length > 0) {
+    if (lines.length > 0) lines.push('')
+    lines.push('Appended to:')
+    for (const f of allAppended) lines.push(`  ${f}`)
   }
   if (allSkipped.length > 0) {
     if (lines.length > 0) lines.push('')
