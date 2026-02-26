@@ -663,3 +663,21 @@ Charter version bumps are required only when the Charter file itself changes:
 **No bump required** when a member Sigil bumps its own version or changes its status.
 
 **Rationale:** Each layer's versioning contract covers that layer's own content — not the contracts of its members. A Charter's consumers depend on the Charter's vocabulary, invariants, scope, and membership set. They do not depend on which version of a member Sigil is current at any given time; that is the Sigil's own versioning concern. Conflating the two would cause Charter versions to churn on every Sigil change, making Charter version history noisy and the bump signal meaningless.
+
+---
+
+## DD-056 — CLI Version Flag
+
+**Date:** 2026-02-25
+**Decision:** `sigil --version` and `sigil -v` print the version string from `package.json` and exit. The version is read at runtime from `package.json` via `import.meta.url`, ensuring it is always in sync with the published package version without a separate build step or hardcoded constant.
+**Rationale:** The flag was missing entirely, causing `sigil --version` to emit `Unknown command: '--version'`. Reading from `package.json` at runtime is the idiomatic Node.js ESM approach and eliminates the possibility of a hardcoded version drifting from the published one.
+
+---
+
+## DD-057 — CLAUDE.md Generation in `sigil agent add claude-code`
+
+**Date:** 2026-02-25
+**Decision:** `sigil agent add claude-code` handles `CLAUDE.md` conditionally:
+- **No existing `CLAUDE.md`:** creates one containing a comment instructing the user to customize it, followed by the Sigil block (corpus structure, traversal order, `/author` and `/consumer` commands).
+- **Existing `CLAUDE.md`:** prompts the user to append the Sigil block. If the user confirms, the block is appended. If the user declines, the block is printed to stdout for manual insertion. If the user cancels (Ctrl+C), the command exits silently with no changes made.
+**Rationale:** `CLAUDE.md` is the engineer's project instructions file — overwriting it unconditionally would destroy existing content. Creating a stub when none exists provides a working starting point while the comment makes clear that the file is meant to be extended. Prompting on conflict respects the user's existing content while still making the Sigil block easy to add. Silent exit on cancel is consistent with the principle that an explicit abort should produce no side effects.
