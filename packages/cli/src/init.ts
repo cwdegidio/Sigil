@@ -36,16 +36,16 @@ export function init(projectName: string, outputDir: string): InitResult {
   const manifest = [
     `[project]`,
     `name = "${projectName}"`,
-    `doctrine = "${projectName}.doctrine"`,
+    `doctrine = "spec/${projectName}.doctrine"`,
     ``,
     `[paths]`,
-    `charters = "charters/"`,
-    `sigils = "sigils/"`,
+    `charters = "spec/charters/"`,
+    `sigils = "spec/sigils/"`,
   ].join('\n') + '\n'
 
   writeFile('sigil.toml', manifest)
-  makeDir('charters')
-  makeDir('sigils')
+  makeDir('spec/charters')
+  makeDir('spec/sigils')
 
   return { created, skipped }
 }
