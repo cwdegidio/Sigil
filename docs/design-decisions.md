@@ -681,3 +681,37 @@ Charter version bumps are required only when the Charter file itself changes:
 - **No existing `CLAUDE.md`:** creates one containing a comment instructing the user to customize it, followed by the Sigil block (corpus structure, traversal order, `/author` and `/consumer` commands).
 - **Existing `CLAUDE.md`:** prompts the user to append the Sigil block. If the user confirms, the block is appended. If the user declines, the block is printed to stdout for manual insertion. If the user cancels (Ctrl+C), the command exits silently with no changes made.
 **Rationale:** `CLAUDE.md` is the engineer's project instructions file — overwriting it unconditionally would destroy existing content. Creating a stub when none exists provides a working starting point while the comment makes clear that the file is meant to be extended. Prompting on conflict respects the user's existing content while still making the Sigil block easy to add. Silent exit on cancel is consistent with the principle that an explicit abort should produce no side effects.
+
+---
+
+## DD-058 — Default Corpus Layout Uses `spec/` Subfolder
+
+**Date:** 2026-02-26
+**Decision:** `sigil init` generates all spec files under a `spec/` subfolder. `sigil.toml` stays at the project root and references the subfolder via its configurable path fields. The default `sigil.toml` reads:
+
+```toml
+[project]
+name = "ProjectName"
+doctrine = "spec/ProjectName.doctrine"
+
+[paths]
+charters = "spec/charters/"
+sigils = "spec/sigils/"
+```
+
+The `spec/` name is the fixed default convention. Users who need a different layout (e.g., `corpus/`, a monorepo arrangement) may change the paths in `sigil.toml` directly. No dedicated CLI option is provided for this — the TOML file is the configuration surface.
+
+Context artifacts (`SIGIL-AUTHOR.md`, `SIGIL-CONSUMER.md`) remain at the project root; they are agent instructions, not spec content, and belong alongside `CLAUDE.md` and similar files.
+
+This layout applies to all new projects created with `sigil init`. The PetHealth trial corpus is not affected.
+
+**Rationale:** Sigil corpora live at the root of a project repo alongside implementation artifacts (`frontend/`, `backend/`, etc.). A flat corpus layout — doctrine and `charters/`, `sigils/` directories at the project root — is visually ambiguous and clutters the root alongside source directories. A `spec/` subfolder makes the boundary between specification and implementation immediately legible and groups all corpus content under a single, predictable path.
+
+---
+
+## DD-059 — `sigil.toml` Is the Source of Truth for Corpus Paths; Context Artifacts Are Static
+
+**Date:** 2026-02-26
+**Decision:** `sigil.toml` is the authoritative source for all corpus path configuration. Context artifacts (`SIGIL-AUTHOR.md`, `SIGIL-CONSUMER.md`) are static documents — they are not generated dynamically from the manifest. Instead, they instruct the consuming agent to read `sigil.toml` directly and derive paths from it. The `[paths]` section of `sigil.toml` is the single location where corpus layout is defined; no other artifact duplicates or re-derives those paths.
+
+**Rationale:** Dynamic context generation would couple `sigil agent add` to the presence and content of `sigil.toml` at generation time, and would produce stale artifacts if the manifest is later changed. Static artifacts that direct the agent to the manifest are simpler, always accurate, and place path authority exactly where it belongs — in the manifest. The agent's traversal instructions already use `{paths.charters}` and `{paths.sigils}` notation, making clear that these values come from the manifest rather than the artifact itself.

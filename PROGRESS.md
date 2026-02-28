@@ -66,11 +66,12 @@ A → B → C
 Items surfaced during the PetHealth trial (`docs/trial-2-23-2026_1/`). Grouped by category.
 
 ### Tooling Bugs
-- [ ] Fix `sigil --version` — currently returns `Unknown command: '--version'`
-- [ ] `sigil init` produces no `CLAUDE.md` — decide whether to generate one or output a paste-in block (sdkman-style)
+- [x] Fix `sigil --version` — currently returns `Unknown command: '--version'`
+- [x] `sigil init` produces no `CLAUDE.md` — decide whether to generate one or output a paste-in block (sdkman-style)
 
 ### Project Structure
-- [ ] Decide: should Doctrine, Charter, and Sigil files live under a `spec/` subfolder? Only `sigil.toml` at root. Requires design decision.
+- [x] Decide: should Doctrine, Charter, and Sigil files live under a `spec/` subfolder? Only `sigil.toml` at root. → Yes, `spec/` is the default; paths are configurable in `sigil.toml` (DD-058)
+- [x] Implement DD-058 — update `sigil init` to generate corpus under `spec/` subfolder
 
 ### Validator Improvements
 - [ ] Plural form resolution — `Appointments` does not resolve from `Appointment`; decide on validator behavior or enforce singular-only convention in spec
@@ -94,6 +95,30 @@ Items surfaced during the PetHealth trial (`docs/trial-2-23-2026_1/`). Grouped b
 
 - [ ] **Trial 2 — Brownfield project workflow** — define and trial a workflow for adopting Sigil on an existing codebase (spec written after implementation exists, or incrementally alongside active development)
 
+### Trial 2 Candidate: AEM 6.5 On-Prem Project
+
+AEM is a strong Trial 2 candidate because it exercises brownfield concerns and introduces a platform constraint layer not present in greenfield trials.
+
+**Proposed corpus structure:**
+```
+spec/
+  MyAEMProject.doctrine      ← platform-wide: authoring model, content policy rules, global vocabulary
+  charters/
+    ContentComponents.charter  ← Teaser, Hero, Text, Image, etc.
+    Navigation.charter
+    Commerce.charter           ← if applicable
+    SiteConfiguration.charter  ← language roots, page templates
+  sigils/
+    Teaser.sigil
+    Hero.sigil
+    Navigation.sigil
+    ...
+```
+
+**Key design principle confirmed:** corpus organization maps to feature domains, not Maven module structure (`core/`, `ui.apps/`, `ui.frontend/`). A feature's behavior spans modules — the spec is indifferent to which module implements it.
+
+**Open question for Trial 2 design:** AEM imposes its own platform-level constraints (content policies, Sling model resolution, dialog authoring rules). These sit above the project's own doctrine but below external integrations. Does Sigil need a mechanism to represent platform-imposed constraints that the project doctrine inherits or defers to? This was not present in the PetHealth (greenfield, no external platform) trial.
+
 ## Future Considerations — Language Extensions
 
 Noted for future design sessions. None are scheduled; design rigor requires each to be fully specified before implementation.
@@ -106,7 +131,20 @@ Noted for future design sessions. None are scheduled; design rigor requires each
 
 ## Open Questions
 
-- None active. All open questions from previous sessions resolved.
+### Active: Plural Form Resolution DD
+
+**Context:** The PetHealth trial surfaced that `Appointments` does not resolve from a vocabulary entry of `Appointment`. The validator errors with no guidance, which authors found confusing. All existing examples use singular vocabulary keys (`Appointment`, `Pet`, `Session`) but singular-only has never been formally stated in the spec — it is implicit convention only.
+
+**Two sub-questions to resolve:**
+1. Should singular-only be formally established as a spec rule for vocabulary keys?
+2. What should the validator do when a plural form appears in a provision?
+
+**Options on the table:**
+- **Option A — Auto-resolve:** Validator strips common plural suffixes (`s`, `es`, `ies→y`) and tries the singular form. `Appointments` resolves if `Appointment` exists. Risk: English pluralization is irregular; naive suffix-stripping produces edge cases and false positives; resolver behavior becomes non-obvious.
+- **Option B — Hard error, terse (current behavior):** `Appointments` is an unresolved identifier. Error emitted, no guidance. Already identified as the problem.
+- **Option C — Hard error, actionable:** Validator detects likely-plural form and emits a helpful message: `'Appointments' is not defined in vocabulary. Vocabulary keys use singular forms — did you mean 'Appointment'?` Enforces the right convention while guiding the author to the fix. Plural detection heuristic mis-fires only affect the suggestion, not correctness.
+
+**Current lean:** Option C — formalize singular-only as an explicit spec rule, invest in the error message rather than auto-resolution. Decision pending confirmation.
 
 ## Completed — Phase 1
 
