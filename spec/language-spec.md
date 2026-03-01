@@ -87,6 +87,8 @@ QUOTED_STR  = '"' any character* '"'
 
 **IDENTIFIER** matches a Capitalized CamelCase name — first character uppercase, followed by one or more alphanumeric characters. All named artifacts in Sigil (Sigil names, Charter names, Doctrine names, provision names, vocabulary entry keys) use this form. Language keywords (`sigil`, `charter`, `doctrine`, `provision`, `identity`, `vocabulary`, `scope`, `invariants`, `trigger`, `preconditions`, `postconditions`, `behavior`, `rule`, `and`, `or`, `excludes`, `version`, `status`, `description`, `definition`, `sigils`, `charters`) are lowercase and are not IDENTIFIERs.
 
+Apostrophe (`'`) is not a valid IDENTIFIER character. Possessive constructions (`Appointment's`) are a grammar error. Use the `of the X` form ("the status of the Appointment") or a compound noun form ("Appointment status") instead.
+
 **FREE_TEXT** permits colons and dashes mid-line. Disambiguation is by position: structural uses of `:` and `-` occur only at the start of a line after indentation. A leading `- ` (dash followed by a space, at line start after indent) is always a list-item marker, never FREE_TEXT content.
 
 **AT** (`@`) is the version pin operator. It is valid only within a `member-ref` production. Its presence anywhere else is a parse error.
@@ -139,6 +141,8 @@ definition-field    = "definition" ":" QUOTED_STR NEWLINE
 The `vocabulary` section defines terms used within the artifact's provisions or invariants. At least one entry is required if the section is present — an empty `vocabulary:` block is a parse error.
 
 Each entry key is an IDENTIFIER. The `definition` value is a `QUOTED_STR` containing a human-readable description of the term.
+
+Vocabulary keys must use the singular form. Plural forms as vocabulary keys are a validation error. Where the validator detects that a key matches a common English plural pattern (trailing `s`, `es`, or `ies`), it emits an actionable message identifying the likely singular form.
 
 Any Capitalized identifier appearing in a provision or invariant within a Sigil must have a corresponding vocabulary entry resolvable through the Doctrine → Charter → Sigil chain. An unresolvable Capitalized identifier is a validation error. See Section 9 — Vocabulary Resolution.
 
@@ -426,12 +430,38 @@ A Doctrine's `invariants` apply platform-wide, across all member Charters and th
 
 ## 9. Vocabulary Resolution
 
-Vocabulary terms are resolved through the Doctrine → Charter → Sigil chain. When an agent encounters a Capitalized identifier in a provision or invariant, it resolves the term as follows:
+### 9.1 Identifier Detection in Provision Text
+
+Provision and invariant text is mixed content — natural language prose surrounding vocabulary references. The resolver distinguishes the two by token form: only IDENTIFIER tokens (PascalCase, matching `[A-Z][A-Za-z0-9]+`) are treated as vocabulary references. All other tokens — lowercase words, numbers, punctuation, quantifier phrases such as "1 or more" or "at least one" — are prose and are not resolved.
+
+**PascalCase is the only capitalization convention in provision text.** There is no sentence-case rule — the `-` list-item marker already delimits the start of an item. Articles, quantifiers, conjunctions, verbs, and all other prose words must be lowercase, including at the start of a list item. A PascalCase word anywhere in provision text signals a vocabulary reference; no other interpretation exists.
+
+```
+- 1 or more Appointment can be cancelled
+- the system notifies each Pet owner
+- no Appointment can overlap with an existing Appointment
+- all Pet records must be retained
+```
+
+The validator resolves `Appointment` and `Pet`; all lowercase prose is ignored. A PascalCase word that does not resolve to a vocabulary entry is always a validation error — there are no reserved non-vocabulary PascalCase words.
+
+### 9.2 Resolution Chain
+
+When the resolver encounters an IDENTIFIER in a provision or invariant, it resolves the term as follows:
 
 1. Check the containing Sigil's `vocabulary` section.
 2. If not found, check the `vocabulary` section of the Sigil's governing Charter.
 3. If not found, check the `vocabulary` section of the Charter's governing Doctrine.
 4. If not found at any layer, the identifier is unresolved — a validation error.
+
+Resolution requires an **exact match** between the identifier as written and a vocabulary key. No normalization is applied. `Appointments` does not resolve from a vocabulary key of `Appointment`.
+
+When an unresolved identifier matches a common English plural pattern (trailing `s`, `es`, or `ies`) and a corresponding singular form exists in the vocabulary, the validator emits an actionable error message identifying the singular candidate:
+
+```
+'Appointments' is not defined in vocabulary.
+Vocabulary keys use singular forms — did you mean 'Appointment'?
+```
 
 Resolution is by **full replacement**. When a term is defined at multiple layers, the innermost definition takes effect for all artifacts at that layer and below. Outer-layer definitions for the same term are not consulted and do not merge with the inner definition. A Charter-level definition of `User` replaces any Doctrine-level definition of `User` for all Sigils within that Charter's scope.
 
@@ -474,6 +504,7 @@ Errors fall into two categories.
 | Empty `sigils:` block in a Charter | §7.4 |
 | Empty `charters:` block in a Doctrine | §8.4 |
 | `@` appearing outside a `member-ref` | §5.6 |
+| Possessive suffix (`'s`) attached to an identifier | §4 |
 | Tabs used for indentation | §2.2 |
 | Mixed tabs and spaces | §2.2 |
 
@@ -481,7 +512,9 @@ Errors fall into two categories.
 
 | Condition | Section |
 |---|---|
-| Capitalized identifier in a provision or invariant with no vocabulary entry in the resolution chain | §9 |
+| Capitalized identifier in a provision or invariant with no exact-match vocabulary entry in the resolution chain | §9.2 |
+| Capitalized identifier in a provision or invariant that resembles a plural form of an existing vocabulary key (actionable message emitted) | §9.2 |
+| Vocabulary key that matches a common English plural pattern | §5.2 |
 | Version-pinned member reference that cannot be resolved in the environment | §10 |
 | Member reference name that cannot be found in the search paths declared in the manifest | §12 |
 

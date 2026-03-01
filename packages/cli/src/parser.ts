@@ -181,6 +181,17 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
           pos: t.pos,
         })
       }
+      // Check for possessive suffix on an identifier
+      if (t.type === 'IDENTIFIER') {
+        const next = peek()
+        if (next.type === 'FREE_TEXT' && /^'s(\s|$)/.test(next.value)) {
+          errors.push({
+            category: 'PARSE',
+            message: `Possessive form '${t.value}'s' is not valid syntax. Use 'the [field] of the ${t.value}' or '${t.value} [field]' instead.`,
+            pos: t.pos,
+          })
+        }
+      }
       parts.push(t.value)
     }
     return parts.join(' ').trim()

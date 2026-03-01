@@ -17,10 +17,19 @@ interface LoadedFile<T extends ArtifactFile> {
 // ─── Vocabulary resolution ────────────────────────────────────────────────────
 
 // Build a flat map of term → definition from a vocabulary section (if present).
-function buildVocabMap(artifact: ArtifactFile): Map<string, string> {
+// Emits a validation error for any key that appears to be a plural form.
+function buildVocabMap(artifact: ArtifactFile, errors: SigilError[]): Map<string, string> {
   const map = new Map<string, string>()
   if (artifact.vocabulary) {
     for (const entry of artifact.vocabulary.entries) {
+      const singular = singularCandidate(entry.name)
+      if (singular !== null) {
+        errors.push({
+          category: 'VALIDATION',
+          message: `Vocabulary key '${entry.name}' appears to be a plural form. Vocabulary keys must use singular forms — did you mean '${singular}'?`,
+          pos: entry.pos,
+        })
+      }
       map.set(entry.name, entry.definition)
     }
   }
@@ -36,6 +45,40 @@ function resolveTerm(
   doctrineVocab: Map<string, string>,
 ): boolean {
   return sigilVocab.has(term) || charterVocab.has(term) || doctrineVocab.has(term)
+}
+
+// Return the likely singular form of a term using common English suffix rules,
+// or null if the term does not match a known plural pattern.
+// Used for best-effort error message suggestions only — not for resolution.
+function singularCandidate(term: string): string | null {
+  if (term.length > 4 && term.endsWith('ies')) return term.slice(0, -3) + 'y'
+  if (term.length > 3 && term.endsWith('es')) return term.slice(0, -2)
+  if (term.length > 3 && term.endsWith('s')) return term.slice(0, -1)
+  return null
+}
+
+// Build an actionable error message for an unresolved identifier.
+// Checks in order: plural candidate, lowercase prose suggestion.
+function unresolvedMessage(
+  term: string,
+  context: string,
+  sigilVocab: Map<string, string>,
+  charterVocab: Map<string, string>,
+  doctrineVocab: Map<string, string>,
+): string {
+  const base = `'${term}' in ${context} is not defined in vocabulary.`
+
+  const singular = singularCandidate(term)
+  if (singular !== null && resolveTerm(singular, sigilVocab, charterVocab, doctrineVocab)) {
+    return `${base} Vocabulary keys use singular forms — did you mean '${singular}'?`
+  }
+
+  const lower = term.toLowerCase()
+  if (lower !== term) {
+    return `${base} Only vocabulary references use PascalCase in provision text — did you mean '${lower}'?`
+  }
+
+  return base
 }
 
 // ─── Identifier extraction ────────────────────────────────────────────────────
@@ -230,17 +273,17 @@ export function validate(manifest: Manifest): ValidationResult {
 
   // ── Step 5: Vocabulary resolution ─────────────────────────────────────────
 
-  const doctrineVocab = buildVocabMap(doctrine)
+  const doctrineVocab = buildVocabMap(doctrine, errors)
 
   for (const { ast: charter } of charters) {
-    const charterVocab = buildVocabMap(charter)
+    const charterVocab = buildVocabMap(charter, errors)
 
     for (const sigilRef of charter.sigils) {
       const loaded = sigilsByName.get(sigilRef.name)
       if (!loaded) continue
 
       const sigil = loaded.ast
-      const sigilVocab = buildVocabMap(sigil)
+      const sigilVocab = buildVocabMap(sigil, errors)
 
       // Check all Capitalized identifiers in provisions
       for (const prov of sigil.provisions) {
@@ -249,7 +292,7 @@ export function validate(manifest: Manifest): ValidationResult {
             if (!resolveTerm(term, sigilVocab, charterVocab, doctrineVocab)) {
               errors.push({
                 category: 'VALIDATION',
-                message: `Identifier '${term}' in provision '${prov.name}' has no vocabulary entry in the resolution chain (sigil → charter → doctrine)`,
+                message: unresolvedMessage(term, `provision '${prov.name}'`, sigilVocab, charterVocab, doctrineVocab),
                 pos,
               })
             }
@@ -263,7 +306,7 @@ export function validate(manifest: Manifest): ValidationResult {
           if (!resolveTerm(term, sigilVocab, charterVocab, doctrineVocab)) {
             errors.push({
               category: 'VALIDATION',
-              message: `Identifier '${term}' in sigil invariants of '${sigil.name}' has no vocabulary entry in the resolution chain`,
+              message: unresolvedMessage(term, `sigil invariants of '${sigil.name}'`, sigilVocab, charterVocab, doctrineVocab),
               pos,
             })
           }
