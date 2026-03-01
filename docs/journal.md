@@ -472,3 +472,37 @@ Conducted the first real-world trial of the full Sigil workflow. Authored a comp
 ### Next
 
 Work through trial findings before publishing to npm at v0.2.0. Items tracked in `PROGRESS.md` under "Active Work — Trial 1 Findings".
+
+---
+
+## 2026-03-01 — Plural Form Resolution and Provision Text Capitalization Rules
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Resolved two closely related Trial 1 validator improvement items: plural form resolution and the articles-at-line-start failure mode. Both led to formal spec changes and validator implementation.
+
+### Design Decisions Made
+
+**DD-060 — Vocabulary Key Form: Singular Only; Provision Identifier References: Singular Canonical Form**
+
+Formalized singular-only as an explicit spec rule for vocabulary keys. Identifier references in provision text must use the canonical singular form. Possessive syntax (`Appointment's`) is a grammar error pointing authors to the `of the X` or compound noun pattern. Plural forms in provisions produce a resolution error with an actionable suggestion identifying the singular candidate. Cardinality is expressed through free-form prose surrounding singular identifiers — the validator ignores non-PascalCase tokens.
+
+Key design path: considered auto-resolution (Option A) and rejected it because English pluralization is irregular; normalization rules baked into the spec carry linguistic edge cases as spec defects. Considered possessives as resolution errors but chose grammar errors for better messaging. Arrived at "PascalCase = exact vocabulary key match" as the clean invariant.
+
+**DD-061 — Provision Text Capitalizes Vocabulary References Only**
+
+The articles-at-line-start problem (`The`, `An`, `No`, `All` parsed as identifiers) led to two candidate approaches: a formal stoplist of reserved non-vocabulary PascalCase words, or a blanket rule that all prose in provisions must be lowercase with PascalCase reserved exclusively for vocabulary references. Chose the blanket rule — simpler, no enumeration, consistent with DD-005 (parse-first). The `-` list-item marker already delimits item start; there is no need for sentence-case capitalization. The validator error message suggests the lowercase form when an unresolved identifier would be a common word if lowercased.
+
+### Implementation
+
+Changes span `spec/language-spec.md`, `packages/cli/src/parser.ts`, and `packages/cli/src/validator.ts`:
+
+- **`language-spec.md`**: §4 (apostrophe prohibition, possessive grammar error), §5.2 (singular vocab key rule), §9 (split into 9.1 identifier detection + 9.2 resolution chain; exact-match only; PascalCase-only capitalization rule; plural detection for error messages), §11 (error tables updated)
+- **`parser.ts`**: `collectLineAsText()` detects `IDENTIFIER'S` pattern and emits a grammar error
+- **`validator.ts`**: `singularCandidate()` helper for best-effort plural detection; `unresolvedMessage()` helper for actionable errors (plural suggestion → lowercase suggestion → base message); `buildVocabMap()` flags plural vocabulary keys; all resolution errors consolidated through `unresolvedMessage()`
+
+### Next
+
+Remaining open validator improvement items: status values require explicit vocabulary entries (terse error), and general error message investment. Language extensions (HTTP semantics, response shapes, implementation notes, typed vocabulary) and workflow improvements (consumer-mode gap flagging) are also open before v0.2.0 publish.

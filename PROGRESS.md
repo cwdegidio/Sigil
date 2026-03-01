@@ -74,8 +74,8 @@ Items surfaced during the PetHealth trial (`docs/trial-2-23-2026_1/`). Grouped b
 - [x] Implement DD-058 — update `sigil init` to generate corpus under `spec/` subfolder
 
 ### Validator Improvements
-- [ ] Plural form resolution — `Appointments` does not resolve from `Appointment`; decide on validator behavior or enforce singular-only convention in spec
-- [ ] Articles at line-start parsed as identifiers (`The`, `An`, `No`, `All`) — surprising failure mode; improve error message or add authoring guidance
+- [x] Plural form resolution — formalized singular-only rule (DD-060); possessive syntax is grammar error; plural in provision emits actionable suggestion; plural vocab keys flagged; cardinality via prose
+- [x] Articles at line-start parsed as identifiers (`The`, `An`, `No`, `All`) — resolved by DD-061: PascalCase = vocabulary reference only; all prose lowercase; validator suggests lowercase form
 - [ ] Status values require explicit vocabulary entries — not obvious; improve error message with "did you mean? / add this to vocabulary" suggestion
 - [ ] General: validator error messages are terse; invest in actionable suggestions
 
@@ -131,20 +131,7 @@ Noted for future design sessions. None are scheduled; design rigor requires each
 
 ## Open Questions
 
-### Active: Plural Form Resolution DD
-
-**Context:** The PetHealth trial surfaced that `Appointments` does not resolve from a vocabulary entry of `Appointment`. The validator errors with no guidance, which authors found confusing. All existing examples use singular vocabulary keys (`Appointment`, `Pet`, `Session`) but singular-only has never been formally stated in the spec — it is implicit convention only.
-
-**Two sub-questions to resolve:**
-1. Should singular-only be formally established as a spec rule for vocabulary keys?
-2. What should the validator do when a plural form appears in a provision?
-
-**Options on the table:**
-- **Option A — Auto-resolve:** Validator strips common plural suffixes (`s`, `es`, `ies→y`) and tries the singular form. `Appointments` resolves if `Appointment` exists. Risk: English pluralization is irregular; naive suffix-stripping produces edge cases and false positives; resolver behavior becomes non-obvious.
-- **Option B — Hard error, terse (current behavior):** `Appointments` is an unresolved identifier. Error emitted, no guidance. Already identified as the problem.
-- **Option C — Hard error, actionable:** Validator detects likely-plural form and emits a helpful message: `'Appointments' is not defined in vocabulary. Vocabulary keys use singular forms — did you mean 'Appointment'?` Enforces the right convention while guiding the author to the fix. Plural detection heuristic mis-fires only affect the suggestion, not correctness.
-
-**Current lean:** Option C — formalize singular-only as an explicit spec rule, invest in the error message rather than auto-resolution. Decision pending confirmation.
+_(no active open questions)_
 
 ## Completed — Phase 1
 
