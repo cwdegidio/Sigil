@@ -75,10 +75,10 @@ function unresolvedMessage(
 
   const lower = term.toLowerCase()
   if (lower !== term) {
-    return `${base} Only vocabulary references use PascalCase in provision text — did you mean '${lower}'?`
+    return `${base} If it is a domain term, add a vocabulary entry for '${term}' at the sigil, charter, or doctrine level. If it is a prose word, use lowercase '${lower}' instead.`
   }
 
-  return base
+  return `${base} Add a vocabulary entry for '${term}' at the sigil, charter, or doctrine level.`
 }
 
 // ─── Identifier extraction ────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ export function validate(manifest: Manifest): ValidationResult {
     if (!charterSource) {
       errors.push({
         category: 'VALIDATION',
-        message: `Charter '${charterRef.name}' referenced in doctrine but not found at ${charterPath}`,
+        message: `Charter '${charterRef.name}' referenced in doctrine but not found at ${charterPath}. Create the file with a 'charter ${charterRef.name}:' declaration.`,
         pos: charterRef.pos,
       })
       continue
@@ -218,7 +218,7 @@ export function validate(manifest: Manifest): ValidationResult {
     if (charterRef.version && charter.identity.version !== charterRef.version) {
       errors.push({
         category: 'VALIDATION',
-        message: `Charter '${charterRef.name}' is pinned to version ${charterRef.version} but the file declares version ${charter.identity.version}`,
+        message: `Charter '${charterRef.name}' is pinned to version ${charterRef.version} but declares version ${charter.identity.version}. Update the pin in the doctrine to @${charter.identity.version}, or bump the charter to ${charterRef.version}.`,
         pos: charterRef.pos,
       })
     }
@@ -232,7 +232,7 @@ export function validate(manifest: Manifest): ValidationResult {
         if (!sigilSource) {
           errors.push({
             category: 'VALIDATION',
-            message: `Sigil '${sigilRef.name}' referenced in charter '${charter.name}' but not found at ${sigilPath}`,
+            message: `Sigil '${sigilRef.name}' referenced in charter '${charter.name}' but not found at ${sigilPath}. Create the file with a 'sigil ${sigilRef.name}:' declaration.`,
             pos: sigilRef.pos,
           })
           continue
@@ -258,7 +258,7 @@ export function validate(manifest: Manifest): ValidationResult {
       if (loadedSigil && sigilRef.version && loadedSigil.ast.identity.version !== sigilRef.version) {
         errors.push({
           category: 'VALIDATION',
-          message: `Sigil '${sigilRef.name}' is pinned to version ${sigilRef.version} but the file declares version ${loadedSigil.ast.identity.version}`,
+          message: `Sigil '${sigilRef.name}' is pinned to version ${sigilRef.version} but declares version ${loadedSigil.ast.identity.version}. Update the pin in the charter to @${loadedSigil.ast.identity.version}, or bump the sigil to ${sigilRef.version}.`,
           pos: sigilRef.pos,
         })
       }
