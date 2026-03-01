@@ -76,8 +76,8 @@ Items surfaced during the PetHealth trial (`docs/trial-2-23-2026_1/`). Grouped b
 ### Validator Improvements
 - [x] Plural form resolution — formalized singular-only rule (DD-060); possessive syntax is grammar error; plural in provision emits actionable suggestion; plural vocab keys flagged; cardinality via prose
 - [x] Articles at line-start parsed as identifiers (`The`, `An`, `No`, `All`) — resolved by DD-061: PascalCase = vocabulary reference only; all prose lowercase; validator suggests lowercase form
-- [ ] Status values require explicit vocabulary entries — not obvious; improve error message with "did you mean? / add this to vocabulary" suggestion
-- [ ] General: validator error messages are terse; invest in actionable suggestions
+- [x] Status values require explicit vocabulary entries — unresolved PascalCase identifier now offers both "add vocabulary entry" and "use lowercase prose" suggestions
+- [x] General: validator error messages are terse; invest in actionable suggestions
 
 ### Language Extensions to Design
 - [ ] HTTP semantics — optional `http:` annotation on postconditions for error status codes (e.g., `status: 409`)

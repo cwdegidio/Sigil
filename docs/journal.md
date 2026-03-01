@@ -506,3 +506,36 @@ Changes span `spec/language-spec.md`, `packages/cli/src/parser.ts`, and `package
 ### Next
 
 Remaining open validator improvement items: status values require explicit vocabulary entries (terse error), and general error message investment. Language extensions (HTTP semantics, response shapes, implementation notes, typed vocabulary) and workflow improvements (consumer-mode gap flagging) are also open before v0.2.0 publish.
+
+---
+
+## 2026-03-01 — Actionable Validator and Parser Error Messages
+
+**Contributors:** Engineer, Claude
+
+### Summary
+
+Addressed two Trial 1 validator improvement items: terse error messages and the status-value vocabulary gap. Scope expanded to include parser `withBlock` errors, which had no context.
+
+### Changes
+
+**`validator.ts`**
+
+- Unresolved identifier (PascalCase not in vocabulary): previously the lowercase-suggestion branch only offered `did you mean 'pending'?`, which is wrong for domain status values like `Pending`. Now offers both fixes: add a vocabulary entry *or* use lowercase prose. The fallback branch (unreachable for PascalCase identifiers in practice) also carries the vocabulary-add suggestion for completeness.
+- Missing charter/sigil file: appended `Create the file with a 'charter X:' declaration.` / `'sigil X:' declaration.`
+- Version mismatch (charter): appended `Update the pin in the doctrine to @X, or bump the charter to Y.`
+- Version mismatch (sigil): appended `Update the pin in the charter to @X, or bump the sigil to Y.`
+
+**`parser.ts`**
+
+- `withBlock` now accepts a `context: string` parameter. `Expected indented block` becomes `Expected indented block after 'vocabulary:'` (etc.); DEDENT error becomes `Expected end of 'vocabulary:' block`. All 16 call sites updated with context strings derived from the enclosing keyword/name.
+- Member ref trailing content: message now includes a valid-form example (`- Name` or `- Name@1.0`).
+- `definition:` and `description:` quoted-string errors: added `(e.g. "...")` examples.
+
+### Tests
+
+New `describe('actionable error messages')` groups in both `validator.test.ts` and `parser.test.ts` cover: vocabulary-add guidance for unresolved identifiers, file creation guidance for missing files, update guidance for version mismatches, `withBlock` context in missing-indent errors, and the `definition:` example in quoted-string errors. 64/64 tests pass.
+
+### Next
+
+Language extensions (HTTP semantics, response shapes, implementation notes, typed vocabulary) and workflow improvements (consumer-mode gap flagging) are the remaining open items before v0.2.0 publish.

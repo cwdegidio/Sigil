@@ -78,11 +78,11 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
 
   // Consume INDENT, execute body fn, consume DEDENT.
   // Returns false if INDENT is not present (parse error emitted).
-  function withBlock<T>(bodyFn: () => T): T | null {
+  function withBlock<T>(context: string, bodyFn: () => T): T | null {
     if (!check('INDENT')) {
       errors.push({
         category: 'PARSE',
-        message: `Expected indented block`,
+        message: `Expected indented block after '${context}'`,
         pos: currentPos(),
       })
       return null
@@ -93,7 +93,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     if (!check('DEDENT')) {
       errors.push({
         category: 'PARSE',
-        message: `Expected end of indented block (DEDENT)`,
+        message: `Expected end of '${context}' block`,
         pos: currentPos(),
       })
     } else {
@@ -156,7 +156,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
       if (!check('NEWLINE') && !check('EOF') && !check('DEDENT')) {
         errors.push({
           category: 'PARSE',
-          message: `Unexpected content after member reference '${ref.name}'`,
+          message: `Unexpected content after member reference '${ref.name}' — member references must be on their own line (e.g. '- ${ref.name}' or '- ${ref.name}@1.0').`,
           pos: currentPos(),
         })
         skipToNewline()
@@ -219,7 +219,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     let status: string | null = null
     let description: string | undefined
 
-    const result = withBlock(() => {
+    const result = withBlock('identity:', () => {
       // version (required, must come first)
       if (!checkKeyword('version')) {
         errors.push({
@@ -275,7 +275,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
         } else {
           errors.push({
             category: 'PARSE',
-            message: `Expected quoted string after 'description:'`,
+            message: `Expected a quoted string (e.g. "A brief description.") after 'description:'`,
             pos: currentPos(),
           })
           skipToNewline()
@@ -311,7 +311,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
 
     const entries: VocabularyEntry[] = []
 
-    withBlock(() => {
+    withBlock('vocabulary:', () => {
       // Must have at least one entry
       if (!check('IDENTIFIER')) {
         errors.push({
@@ -329,7 +329,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
         skipNewline()
 
         let definition = ''
-        withBlock(() => {
+        withBlock(`${nameTok.value}:`, () => {
           if (!checkKeyword('definition')) {
             errors.push({
               category: 'PARSE',
@@ -345,7 +345,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
           } else {
             errors.push({
               category: 'PARSE',
-              message: `Expected quoted string after 'definition:'`,
+              message: `Expected a quoted string (e.g. "The meaning of the term.") after 'definition:'`,
               pos: currentPos(),
             })
             skipToNewline()
@@ -372,7 +372,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
 
     const excludes: string[] = []
 
-    withBlock(() => {
+    withBlock('scope:', () => {
       if (!checkKeyword('excludes')) {
         errors.push({
           category: 'PARSE',
@@ -385,7 +385,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
       consume('COLON')
       skipNewline()
 
-      withBlock(() => {
+      withBlock('excludes:', () => {
         if (!check('DASH')) {
           errors.push({
             category: 'PARSE',
@@ -411,7 +411,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
 
     const items: string[] = []
 
-    withBlock(() => {
+    withBlock('invariants:', () => {
       if (!check('DASH')) {
         errors.push({
           category: 'PARSE',
@@ -448,8 +448,9 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     skipNewline()
 
     const items: string[] = []
+    const triggerContext = kind === 'single' ? 'trigger:' : `trigger ${kind}:`
 
-    withBlock(() => {
+    withBlock(triggerContext, () => {
       if (!check('DASH')) {
         errors.push({
           category: 'PARSE',
@@ -488,7 +489,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     skipNewline()
 
     const items: string[] = []
-    withBlock(() => {
+    withBlock('preconditions:', () => {
       if (!check('DASH')) {
         errors.push({
           category: 'PARSE',
@@ -511,7 +512,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     skipNewline()
 
     const items: string[] = []
-    withBlock(() => {
+    withBlock('postconditions:', () => {
       if (!check('DASH')) {
         errors.push({
           category: 'PARSE',
@@ -534,7 +535,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     skipNewline()
 
     const items: string[] = []
-    withBlock(() => {
+    withBlock('invariants:', () => {
       if (!check('DASH')) {
         errors.push({
           category: 'PARSE',
@@ -684,7 +685,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
     skipNewline()
 
     let body: BehaviorBody | RuleBody | null = null
-    withBlock(() => {
+    withBlock(`provision ${nameTok.value} ${subtype}:`, () => {
       if (subtype === 'behavior') {
         body = parseBehaviorBody()
       } else {
@@ -742,7 +743,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
       return true
     }
 
-    withBlock(() => {
+    withBlock(`sigil ${nameTok.value}:`, () => {
       // identity (required)
       if (!checkKeyword('identity')) {
         errors.push({
@@ -847,7 +848,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
       return true
     }
 
-    withBlock(() => {
+    withBlock(`charter ${nameTok.value}:`, () => {
       // identity (required)
       if (!checkKeyword('identity')) {
         errors.push({
@@ -873,7 +874,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
         advance() // sigils keyword
         consume('COLON')
         skipNewline()
-        withBlock(() => {
+        withBlock('sigils:', () => {
           if (!check('DASH')) {
             errors.push({
               category: 'PARSE',
@@ -956,7 +957,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
       return true
     }
 
-    withBlock(() => {
+    withBlock(`doctrine ${nameTok.value}:`, () => {
       // identity (required)
       if (!checkKeyword('identity')) {
         errors.push({
@@ -982,7 +983,7 @@ export function parse(source: string, file: string): ParseResult<ArtifactFile> {
         advance() // charters keyword
         consume('COLON')
         skipNewline()
-        withBlock(() => {
+        withBlock('charters:', () => {
           if (!check('DASH')) {
             errors.push({
               category: 'PARSE',

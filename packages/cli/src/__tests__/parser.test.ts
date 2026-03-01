@@ -403,6 +403,74 @@ sigil Checkout:
     })
   })
 
+  describe('actionable parse error messages', () => {
+    it('includes block context in missing-indent error for vocabulary', () => {
+      // vocabulary: with no indented block following — triggers withBlock error
+      const src = `\
+sigil Checkout:
+    identity:
+        version: 1.0
+        status: draft
+    vocabulary:
+    provision PlaceOrder behavior:
+        trigger:
+            - User submits form
+        postconditions:
+            - Order is created
+`
+      const { errors } = parse(src, 'test.sigil')
+      expect(errors.some(e => e.message.match(/after 'vocabulary:'/i))).toBe(true)
+    })
+
+    it('includes block context in missing-indent error for a provision body', () => {
+      const src = `\
+sigil Checkout:
+    identity:
+        version: 1.0
+        status: draft
+    provision PlaceOrder behavior:
+provision AnotherProvision behavior:
+`
+      const { errors } = parse(src, 'test.sigil')
+      expect(errors.some(e => e.message.match(/after 'provision PlaceOrder behavior:'/i))).toBe(true)
+    })
+
+    it('includes example in unexpected-content-after-member-ref error', () => {
+      const src = `\
+charter OrderManagement:
+    identity:
+        version: 1.0
+        status: draft
+    sigils:
+        - Checkout extra-content-here
+`
+      const { errors } = parse(src, 'test.charter')
+      expect(errors.some(e =>
+        e.message.match(/Unexpected content after member reference 'Checkout'/i) &&
+        e.message.match(/- Checkout/)
+      )).toBe(true)
+    })
+
+    it('includes example in bad definition quoted-string error', () => {
+      const src = `\
+sigil Checkout:
+    identity:
+        version: 1.0
+        status: draft
+    vocabulary:
+        Cart:
+            definition: not quoted
+    provision PlaceOrder behavior:
+        trigger:
+            - User submits form
+        postconditions:
+            - Order is created
+`
+      const { errors } = parse(src, 'test.sigil')
+      expect(errors.some(e => e.message.match(/definition/) && e.message.match(/e\.g\./i))).toBe(true)
+    })
+  })
+
   describe('behavior vs rule field ordering', () => {
     it('errors when postconditions is missing from a behavior provision', () => {
       const src = `\

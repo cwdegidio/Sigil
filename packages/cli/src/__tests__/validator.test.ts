@@ -232,6 +232,139 @@ sigil Checkout:
     })
   })
 
+  describe('actionable error messages', () => {
+    it('suggests adding a vocabulary entry for an unresolved identifier with no other candidates', () => {
+      const dir = join(tmpdir(), `sigil-validator-vocab-fallback-${Date.now()}`)
+      const sigilWithUnknownStatus = `\
+sigil Checkout:
+    identity:
+        version: 1.0
+        status: draft
+    provision PlaceOrder behavior:
+        trigger:
+            - User submits the checkout form
+        postconditions:
+            - Order is created with status Pending
+`
+      try {
+        const manifestPath = buildCorpus(dir, {
+          doctrine: DOCTRINE_CONTENT,
+          charters: { OrderManagement: CHARTER_CONTENT },
+          sigils: { Checkout: sigilWithUnknownStatus },
+        })
+        const manifest = loadManifest(manifestPath)
+        const { errors } = validate(manifest)
+        const pendingError = errors.find(e => e.message.match(/Pending/))
+        expect(pendingError).toBeDefined()
+        expect(pendingError?.message).toMatch(/vocabulary entry.*Pending|add.*vocabulary.*Pending/i)
+      } finally {
+        rmSync(dir, { recursive: true })
+      }
+    })
+
+    it('includes file creation guidance for a missing charter', () => {
+      const dir = join(tmpdir(), `sigil-validator-msg-charter-${Date.now()}`)
+      try {
+        const manifestPath = buildCorpus(dir, {
+          doctrine: DOCTRINE_CONTENT,
+          charters: {},
+          sigils: {},
+        })
+        const manifest = loadManifest(manifestPath)
+        const { errors } = validate(manifest)
+        const err = errors.find(e => e.message.match(/OrderManagement/))
+        expect(err).toBeDefined()
+        expect(err?.message).toMatch(/charter OrderManagement/)
+        expect(err?.message).toMatch(/declaration/)
+      } finally {
+        rmSync(dir, { recursive: true })
+      }
+    })
+
+    it('includes file creation guidance for a missing sigil', () => {
+      const dir = join(tmpdir(), `sigil-validator-msg-sigil-${Date.now()}`)
+      try {
+        const manifestPath = buildCorpus(dir, {
+          doctrine: DOCTRINE_CONTENT,
+          charters: { OrderManagement: CHARTER_CONTENT },
+          sigils: {},
+        })
+        const manifest = loadManifest(manifestPath)
+        const { errors } = validate(manifest)
+        const err = errors.find(e => e.message.match(/Checkout/))
+        expect(err).toBeDefined()
+        expect(err?.message).toMatch(/sigil Checkout/)
+        expect(err?.message).toMatch(/declaration/)
+      } finally {
+        rmSync(dir, { recursive: true })
+      }
+    })
+
+    it('includes update guidance for a charter version mismatch', () => {
+      const dir = join(tmpdir(), `sigil-validator-msg-charter-version-${Date.now()}`)
+      const doctrineWithPin = `\
+doctrine ECommerce:
+    identity:
+        version: 1.0
+        status: draft
+    charters:
+        - OrderManagement@2.0
+    vocabulary:
+        Currency:
+            definition: "The platform denomination."
+`
+      try {
+        const manifestPath = buildCorpus(dir, {
+          doctrine: doctrineWithPin,
+          charters: { OrderManagement: CHARTER_CONTENT }, // declares 1.0
+          sigils: { Checkout: SIGIL_CONTENT },
+        })
+        const manifest = loadManifest(manifestPath)
+        const { errors } = validate(manifest)
+        const err = errors.find(e => e.message.match(/OrderManagement/) && e.message.match(/version|pinned/i))
+        expect(err).toBeDefined()
+        expect(err?.message).toMatch(/@1\.0/)
+        expect(err?.message).toMatch(/2\.0/)
+      } finally {
+        rmSync(dir, { recursive: true })
+      }
+    })
+
+    it('includes update guidance for a sigil version mismatch', () => {
+      const dir = join(tmpdir(), `sigil-validator-msg-sigil-version-${Date.now()}`)
+      const charterWithPin = `\
+charter OrderManagement:
+    identity:
+        version: 1.0
+        status: draft
+    sigils:
+        - Checkout@2.0
+    vocabulary:
+        User:
+            definition: "An authenticated account holder."
+        Order:
+            definition: "A confirmed purchase record."
+        Cart:
+            definition: "A transient collection of items."
+`
+      try {
+        const manifestPath = buildCorpus(dir, {
+          doctrine: DOCTRINE_CONTENT,
+          charters: { OrderManagement: charterWithPin },
+          sigils: { Checkout: SIGIL_CONTENT }, // declares 1.0
+        })
+        const manifest = loadManifest(manifestPath)
+        const { errors } = validate(manifest)
+        const err = errors.find(e => e.message.match(/Checkout/) && e.message.match(/version|pinned/i))
+        expect(err).toBeDefined()
+        expect(err?.message).toMatch(/@1\.0/)
+        expect(err?.message).toMatch(/2\.0/)
+      } finally {
+        rmSync(dir, { recursive: true })
+      }
+    })
+  })
+
   describe('version-pinned references', () => {
     it('emits VALIDATION error when pinned version does not match file version', () => {
       const dir = join(tmpdir(), `sigil-validator-version-${Date.now()}`)
